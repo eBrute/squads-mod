@@ -4,4 +4,5 @@ modEntry = {
 	FileHooks = "lua/squads/FileHooks.lua",
 	Priority = 10
 };
-error("");
+
+Print("VVVVVVVVVVV")

@@ -4,11 +4,11 @@ Script.Load("lua/Table.lua");
 local tins = table.insert;
 local trmv = table.removevalue;
 
-local oldTeamInitialize = Team.Initialize
-
 local meta = {
 	__mode = "v";
 };
+
+local oldTeamInitialize = Team.Initialize
 
 function Team:Initialize(recipient)
     oldTeamInitialize(self, teamName, teamNumber);
@@ -21,24 +21,25 @@ end
 local oldAddPlayer = Team.AddPlayer;
 
 function Team:AddPlayer(player)
-	oldAddPlayer(self, player);
-	tins(self.squads[kSquadType.Invalid], player);
-	player.squadNumber = kSquadType.Invalid;
+	if player and player:isa("Player") then
+		tins(self.squads[kSquadType.Invalid], player);
+		player.squadNumber = kSquadType.Invalid;
+	end
+	return oldAddPlayer(self, player);
 end
 
 local oldRemovePlayer = Team.RemovePlayer;
 
 function Team:RemovePlayer(player)
-	oldRemovePlayer(self, player);
 	local squad = player.squadNumber;
 	trmv(self.squads[squad], player);
 	player.squadNumber = kSquadType.Invalid;
+	return oldRemovePlayer(self, player);
 end
 
 local oldReset = Team.Reset;
-
 function Team:Reset()
-	oldReset();
+	oldReset(self);
 	self.squads = {};
 	for i = 1, #kSquadType do
 		tins(self.squads, setmetatable({}, meta));
@@ -49,8 +50,8 @@ local function checkPlayers(self)
 	local squads = self.squads;
 	for i = 1, #squads do
 		local squad = squads[i];
-		for i = 1, #squad do
-			local player = squad[i];
+		for j = 1, #squad do
+			local player = squad[j];
 			local id = player:GetId();
 			local replayer = Shared.GetEntity(id);
 			Log("Player: %s, Id: %s, Replayer: %s", player, id, replayer);
