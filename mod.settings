@@ -1,0 +1,7 @@
+name        = "Squads"
+source_dir  = "source/"
+output_dir  = "output/"
+description = [=[]=]
+image       = "preview.jpg"
+tag_modtype = ""
+tag_support = ""
