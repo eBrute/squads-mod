@@ -1,11 +1,9 @@
 Script.Load("lua/Globals.lua");
+local tins = table.insert;
+local trmv = table.removevalue;
 
 SquadsMemberMixin = {};
 SquadsMemberMixin.type = "SquadsMember"
-SquadsMemberMixin.networkVars =
-{
-    squadNumber = string.format("integer (0 to %d)", #kSquadType);
-}
 
 function SquadsMemberMixin:__initmixin()
     self.squadNumber = kSquadType.Invalid;
@@ -15,4 +13,9 @@ function SquadsMemberMixin:GetSquad()
     return self.squadNumber;
 end
 
-SquadsMemberMixin.SetSquad = Squad.RegisterPlayer;
+function SquadsMemberMixin:SetSquad(newsquad)
+	local oldsquad = self.squadNumber;
+	local team = self:GetTeam();
+	trmv(team.squads[oldsquad], self);
+	tins(team.squads[newsquad], self);
+end
