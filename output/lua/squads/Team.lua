@@ -1,12 +1,15 @@
-function Team:Initialize(teamName, teamNumber)
-end
 
 local oldTeamInitialize = Team.Initialize
 
 function Team:Initialize(recipient)
     oldTeamInitialize(self, teamName, teamNumber)
-    self.squads = table.array(kMaxSquads)
-    for i = 1, kMaxSquads do
-        self.squads[i] = Squad:Initialize(kSquadType[i], i)
-    end
+    self.squads = {};
+	#self.squads = #kSquadType;
+end
+
+local oldAddPlayer = Team.AddPlayer;
+
+function Team:AddPlayer()
+	oldAddPlayer(self);
+	self.squads[kSquadType.Invalid]
 end

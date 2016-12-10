@@ -16,8 +16,3 @@ function SquadsMemberMixin:GetSquad()
 end
 
 SquadsMemberMixin.SetSquad = Squad.RegisterPlayer;
-
-function SquadsMemberMixin:OnOwnerChanged(oldOwner, newOwner)
-    if newOwner then
-    end
-end
