@@ -2,7 +2,7 @@ SquadsMemberMixin = CreateMixin(SquadsMemberMixin)
 SquadsMemberMixin.type = "SquadsMember"
 SquadsMemberMixin.networkVars =
 {
-    squadNumber = string.format("integer (-1 to %d)", kMaxSquads)
+    squadNumber = string.format("integer (-1 to %d)", kMaxSquadsMembersPerSquad)
 }
 
 function SquadsMemberMixin:__initmixin()
