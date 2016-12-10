@@ -10,10 +10,10 @@ local meta = {
 
 local oldTeamInitialize = Team.Initialize
 
-function Team:Initialize(recipient)
+function Team:Initialize(teamName, teamNumber)
     oldTeamInitialize(self, teamName, teamNumber);
     self.squads = {};
-	for i = 1, #kSquadType do
+	for i = 0, #kSquadType do
 		tins(self.squads, setmetatable({}, meta));
 	end
 end
@@ -41,14 +41,14 @@ local oldReset = Team.Reset;
 function Team:Reset()
 	oldReset(self);
 	self.squads = {};
-	for i = 1, #kSquadType do
+	for i = 0, #kSquadType do
 		tins(self.squads, setmetatable({}, meta));
 	end
 end
 
 local function checkPlayers(self)
 	local squads = self.squads;
-	for i = 1, #squads do
+	for i = 0, #squads do
 		local squad = squads[i];
 		for j = 1, #squad do
 			local player = squad[j];

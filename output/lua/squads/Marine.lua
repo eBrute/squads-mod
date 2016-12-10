@@ -4,6 +4,4 @@ local old = Marine.OnInitialized;
 function Marine:OnInitialized()
 	old(self);
 	InitMixin(self, SquadsMemberMixin);
-	error("fak");
-	Log("ADJWIXU");
 end
