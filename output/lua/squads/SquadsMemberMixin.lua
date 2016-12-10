@@ -11,9 +11,11 @@ function SquadsMemberMixin:__initmixin()
     self.squadNumber = kSquadType.Invalid;
 end
 
-function SquadsMemberMixin:GetSquadNumber()
+function SquadsMemberMixin:GetSquad()
     return self.squadNumber;
 end
+
+SquadsMemberMixin.SetSquad = Squad.RegisterPlayer;
 
 function SquadsMemberMixin:OnOwnerChanged(oldOwner, newOwner)
     if newOwner then
