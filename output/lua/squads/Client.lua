@@ -1,5 +1,69 @@
-
 Event.Hook("LoadComplete", function()
+local kPlayerItemLeftMargin = 10
+local kPlayerNumberWidth = 20
+local kPlayerVoiceChatIconSize = 20
+local kPlayerBadgeIconSize = 20
+local kPlayerBadgeRightPadding = 4
+
+local kSkillBarSize = Vector(48, 15, 0)
+local kSkillBarPadding = 4
+
+local lastScoreboardVisState = false
+
+local kSteamProfileURL = "http://steamcommunity.com/profiles/"
+local kHiveProfileURL = "http://hive.naturalselection2.com/profile/"
+local kMinTruncatedNameLength = 8
+
+local kDeadColor = Color(1,0,0,1)
+
+local kMutedTextTexture = PrecacheAsset("ui/sb-text-muted.dds")
+local kMutedVoiceTexture = PrecacheAsset("ui/sb-voice-muted.dds")
+
+local function HandlePlayerVoiceClicked(self)
+    if MouseTracker_GetIsVisible() then
+        local mouseX, mouseY = Client.GetCursorPosScreen()
+        for t = 1, #self.teams do
+
+            local playerList = self.teams[t]["PlayerList"]
+            for p = 1, #playerList do
+
+                local playerItem = playerList[p]
+                if GUIItemContainsPoint(playerItem["Voice"], mouseX, mouseY) and playerItem["Voice"]:GetIsVisible() then
+
+                    local clientIndex = playerItem["ClientIndex"]
+                    ChatUI_SetClientMuted(clientIndex, not ChatUI_GetClientMuted(clientIndex))
+
+                end
+
+            end
+
+        end
+    end
+end
+
+local function HandlePlayerTextClicked(self)
+    if MouseTracker_GetIsVisible() then
+        local mouseX, mouseY = Client.GetCursorPosScreen()
+        for t = 1, #self.teams do
+
+            local playerList = self.teams[t]["PlayerList"]
+            for p = 1, #playerList do
+
+                local playerItem = playerList[p]
+                if GUIItemContainsPoint(playerItem["Text"], mouseX, mouseY) and playerItem["Text"]:GetIsVisible() then
+
+                    local clientIndex = playerItem["ClientIndex"]
+                    local steamId = GetSteamIdForClientIndex(clientIndex)
+                    ChatUI_SetSteamIdTextMuted(steamId, not ChatUI_GetSteamIdTextMuted(steamId))
+
+                end
+
+            end
+
+        end
+    end
+end
+
 function GUIScoreboard:SendKeyEvent(key, down)
 
     if ChatUI_EnteringChatMessage() then
