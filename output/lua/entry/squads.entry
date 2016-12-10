@@ -1,5 +1,4 @@
 modEntry = {
-	Shared = "lua/squads/Shared.lua",
 	FileHooks = "lua/squads/FileHooks.lua",
 	Priority = 10
 };
