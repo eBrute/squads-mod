@@ -1,5 +1,7 @@
 modEntry = {
+	Client = "lua/squads/Client.lua",
 	Shared = "lua/squads/Shared.lua",
 	FileHooks = "lua/squads/FileHooks.lua",
 	Priority = 10
 };
+error("");
