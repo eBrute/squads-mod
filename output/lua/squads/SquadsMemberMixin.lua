@@ -14,3 +14,8 @@ end
 function SquadsMemberMixin:GetSquadNumber()
     return self.squadNumber;
 end
+
+function SquadsMemberMixin:OnOwnerChanged(oldOwner, newOwner)
+    if newOwner then
+    end
+end
