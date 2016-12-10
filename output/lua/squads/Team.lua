@@ -14,7 +14,7 @@ function Team:Initialize(teamName, teamNumber)
     oldTeamInitialize(self, teamName, teamNumber);
     self.squads = {};
 	for i = 0, #kSquadType do
-		tins(self.squads, setmetatable({}, meta));
+		self.squads[i] = setmetatable({}, meta);
 	end
 end
 
