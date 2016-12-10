@@ -9,5 +9,5 @@ kSquadType = enum (
 	"Magenta",
 	"Yellow",
 	"Orange",
-	"Purple",
+	"Purple"
 );

@@ -30,6 +30,7 @@ function SquadsMemberMixin:GetTeamType()
     return kTeamIndexToType[self.teamNumber]
 end
 
+
 function SquadsMemberMixin:GetTeamNumber()
     return self.teamNumber
 end
