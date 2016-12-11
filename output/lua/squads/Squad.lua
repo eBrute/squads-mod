@@ -41,3 +41,7 @@ end
 function Squad:Reset()
     self.playerIds = {}
 end
+
+function Squad:Dump()
+    Log("Squad #%s.%s: [%s] Players: %s", self.teamNumber, self.squadNumber, self.squadName, self.playerIds)
+end
