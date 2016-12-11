@@ -1,68 +1,50 @@
-Script.Load("lua/Globals.lua");
-Script.Load("lua/Table.lua");
-
-local tins = table.insert;
-local trmv = table.removevalue;
-
-local meta = {
-	__mode = "v";
-};
+Script.Load("lua/Table.lua")
+Script.Load("lua/Globals.lua")
 
 local oldTeamInitialize = Team.Initialize
 
 function Team:Initialize(teamName, teamNumber)
-    oldTeamInitialize(self, teamName, teamNumber);
-    self.squads = {};
-	for i = 1, #kSquadType do
-		self.squads[i] = setmetatable({}, meta);
-	end
+    oldTeamInitialize(self, teamName, teamNumber)
+	self.squads = {}
 end
 
-local oldAddPlayer = Team.AddPlayer;
+
+local oldTeamAddPlayer = Team.AddPlayer
 
 function Team:AddPlayer(player)
-	if player and player:isa("Player") then
-		tins(self.squads[kSquadType.Invalid], player);
-		player.squadNumber = kSquadType.Invalid;
+	if (self.teamNumber == kTeam1Index or self.teamNumber == kTeam2Index) and player and player:isa("Player") then
+		Log("ADDPLAYER %s to team %s", player:GetId(), self.teamName)
+		self.squads[kSquadType.Invalid]:AddPlayer(player)
 	end
-	return oldAddPlayer(self, player);
+	return oldTeamAddPlayer(self, player)
 end
 
-local oldRemovePlayer = Team.RemovePlayer;
+
+local oldTeamRemovePlayer = Team.RemovePlayer
 
 function Team:RemovePlayer(player)
-	local squad = player.squadNumber;
-	trmv(self.squads[squad], player);
-	player.squadNumber = kSquadType.Invalid;
-	return oldRemovePlayer(self, player);
+	if (self.teamNumber == kTeam1Index or self.teamNumber == kTeam2Index) and player and player:isa("Player") then
+		Log("REMOVEPLAYER %s from team %s", player:GetId(), self.teamName)
+		local squad = player.squadNumber
+		Log("player squad: %s", player.squadNumber)
+		self.squads[squad]:RemovePlayer(player)
+	end
+	return oldTeamRemovePlayer(self, player)
 end
 
-local oldReset = Team.Reset;
+
+local oldTeamReset = Team.Reset
+
 function Team:Reset()
-	oldReset(self);
-	self.squads = {};
-	for i = 1, #kSquadType do
-		self.squads[i] = setmetatable({}, meta);
+	for i = 1, #self.squads do
+		self.squads[i]:Reset()
 	end
+	return oldTeamReset(self)
 end
 
-local function checkPlayers(self)
-	local squads = self.squads;
-	for i = 1, #squads do
-		local squad = squads[i];
-		for j = 1, #squad do
-			local player = squad[j];
-			local id = player:GetId();
-			local replayer = Shared.GetEntity(id);
-			Log("Player: %s, Id: %s, Replayer: %s", player, id, replayer);
-		end
-	end
-end
 
 -- For every player on team, call functor(player)
 function Team:ForEachPlayer(functor)
-
-	local checkPlayers = false;
 
     for i, playerId in ipairs(self.playerIds) do
 
@@ -73,13 +55,9 @@ function Team:ForEachPlayer(functor)
             end
         else
             table.remove( self.playerIds, i )
-			checkPlayers = true;
+			for s = 1, #self.squads do
+				self.squads[s]:RemovePlayerById(playerId)
+			end
         end
-
     end
-
-	if checkPlayers then
-		checkPlayers(self);
-	end
-
 end

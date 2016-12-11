@@ -11,3 +11,15 @@ kSquadType = enum {
 	"Orange",
 	"Purple"
 };
+
+kSquadNames = {
+	"Unassigned",
+	"Red Squad",
+	"Green Squad",
+	"Blue Squad",
+	"Cyan Squad",
+	"Magenta Squad",
+	"Yellow Squad",
+	"Orange Squad",
+	"Purple Squad"
+};
