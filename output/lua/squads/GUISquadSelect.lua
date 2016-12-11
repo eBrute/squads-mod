@@ -55,17 +55,8 @@ function GUIFeedbackState_Rating:OnClick()
 
                 StartSoundEffect(self.kSounds.click)
 
-                local waitLevel = self.parent:GetWaitLevel()
-                if waitLevel > 1 then
-                    self.parent:SetWaitLevel(math.ceil(0.5 * waitLevel))
-                end
-
                 self.parent.rating = i
-                if i > 2 then
-                    self.parent:SetState(_G.GUIFeedbackState_End)
-                else
-                    self.parent:SetState(_G.GUIFeedbackState_Reason)
-                end
+                self.parent:SetState(_G.GUIFeedbackState_End)
 
                 return true
             end
@@ -112,13 +103,13 @@ end
 
 function GUIFeedbackState_Rating:Update()
     if self.stars then
-        for i, item in ipairs(self.stars) do
+        for i, star in ipairs(self.stars) do
 
-            if self:GetIsMouseOver(item.Button) then
+            if self:GetIsMouseOver(star.Button) then
 
-                if not item.over then
+                if not star.over then
                     StartSoundEffect(self.kSounds.hovar)
-                    item.over = true
+                    star.over = true
                 end
 
                 for j = 1, i do
@@ -126,8 +117,8 @@ function GUIFeedbackState_Rating:Update()
                     item.Highlight:SetIsVisible(true)
                 end
             else
-                item.Highlight:SetIsVisible(false)
-                item.over = false
+                star.Highlight:SetIsVisible(false)
+                star.over = false
             end
 
         end
@@ -157,7 +148,7 @@ function GUIFeedbackState_Rating:InitializeStarButtons()
     for i = 1, 5 do
         local graphicItem = GUIManager:CreateGraphicItem()
         graphicItem:SetSize(GUIScale(self.kStarIconSize))
-        graphicItem:SetPosition(GUIScale(Vector(50 + (self.kStarIconSize.y) * (i - 1),100, 0)))
+        graphicItem:SetPosition(GUIScale(Vector(50 + self.kStarIconSize.y * (i - 1),100, 0)))
         graphicItem:SetTexture(self.kStarIcon)
 
         self.parent.content:AddChild(graphicItem)
@@ -192,157 +183,6 @@ function GUIFeedbackState_Rating:UnInitialize()
 end
 
 
-
-class 'GUIFeedbackState_Reason' (GUIFeedbackState)
-
-GUIFeedbackState_Reason.name = "GUIFeedbackState_Reason"
-
-GUIFeedbackState_Reason.Reasons = {
-    {11, "FEEDBACK_REASON_11"}, -- bad_teamwork_2
-    {12, "FEEDBACK_REASON_12"}, -- inexp_com_2
-    {13, "FEEDBACK_REASON_13"}, -- i_sucked_2
-    {14, "FEEDBACK_REASON_14"}, -- uneven_teams_2
-    {15, "FEEDBACK_REASON_15"}, -- not_fun_2
-    {16, "FEEDBACK_REASON_16"}, -- other_reason_2
-}
-
-
-local function ShuffleSkipLast( tmp )
-    for i = #tmp - 1, 2, -1 do
-        local j = math.random( i )
-        tmp[ i ], tmp[ j ] = tmp[ j ], tmp[ i ]
-    end
-end
-
-GUIFeedbackState_Reason.reassonColor = Color(1, 1, 1, 0)
-GUIFeedbackState_Reason.reassonActiveColor = Color(1, 1, 1, 1)
-
-GUIFeedbackState_Reason.kTextColor = Color(kMarineFontColor)
-GUIFeedbackState_Reason.kActiveTextColor = kAlienFontColor
-
-
-function GUIFeedbackState_Reason:Initialize(guiElement)
-    self.parent = guiElement
-
-    self.mouseOverStates = {}
-
-    self.parent.background:SetSize(GUIScale(Vector(762, 725, 0)))
-    self.parent.content:SetSize(GUIScale(Vector(662, 650, 0)))
-    self.parent.reasons = {}
-
-    self.parent.question:SetText(Locale.ResolveString("FEEDBACK_REASSON"))
-
-    self.reasonButtons = {}
-
-    ShuffleSkipLast(self.Reasons) -- keeps "other reason" at bottom
-
-    local yOffset = GUIScale(70)
-    for i, data in ipairs(self.Reasons) do
-        local text = data[2]
-        local i = data[1]
-
-        local buttonData = self:CreateButton(yOffset, text, i)
-        self.reasonButtons[#self.reasonButtons + 1] = buttonData
-
-        yOffset = yOffset + buttonData.height + GUIScale(10)
-    end
-
-end
-
-
-function GUIFeedbackState_Reason:CreateButton(topOffset, text, id)
-    local buttonBackground = GUIManager:CreateGraphicItem()
-    buttonBackground:SetAnchor(GUIItem.Middle, GUIItem.Top)
-    self.parent.content:AddChild(buttonBackground)
-
-    local buttontext = GetGUIManager():CreateTextItem()
-    buttontext:SetFontName(GUISquadSelect.kFont)
-    buttontext:SetColor(GUISquadSelect.kTextColor)
-
-    text = Locale.ResolveString(text)
-    buttontext:SetText(text)
-    buttontext:SetScale(GetScaledVector())
-    GUIMakeFontScale(buttontext)
-
-    local width = buttontext:GetTextWidth(text) * GetScaledVector().x
-    local height = buttontext:GetTextHeight(text) * GetScaledVector().y
-
-    buttonBackground:SetSize(Vector(width, height, 0))
-    buttonBackground:SetPosition(Vector(-width/2, topOffset, 0))
-    buttonBackground:SetColor(self.reassonColor)
-    buttonBackground:AddChild(buttontext)
-
-    return { button = buttonBackground, buttontext = buttontext , id = id, height = height, clicked = false}
-end
-
-GUIFeedbackState_Reason.kSounds = {
-    invalid =  "sound/NS2.fev/common/invalid",
-    on = "sound/NS2.fev/common/checkbox_on",
-    off =  "sound/NS2.fev/common/checkbox_off",
-    hovar = "sound/NS2.fev/common/hovar",
-    click = "sound/NS2.fev/common/button_click"
-}
-for _, soundAsset in pairs(GUIFeedbackState_Reason.kSounds) do
-    Client.PrecacheLocalSound(soundAsset)
-end
-
-
-function GUIFeedbackState_Reason:Update()
-    if self.reasonButtons then
-        for _, item in ipairs(self.reasonButtons) do
-
-            if self:GetIsMouseOver(item.button) then
-                item.buttontext:SetColor(item.active and self.kTextColor or self.kActiveTextColor)
-                if not item.over then
-                    StartSoundEffect(self.kSounds.hovar)
-                    item.over = true
-                end
-            else
-                item.buttontext:SetColor(self.kTextColor)
-                item.over = false
-            end
-
-        end
-    end
-end
-
-
-function GUIFeedbackState_Reason:OnClick()
-
-    if self.reasonButtons then
-        for  _, item in ipairs(self.reasonButtons) do
-            if self:GetIsMouseOver(item.button) then
-
-                StartSoundEffect(self.kSounds.click)
-                item.buttontext:SetColor(item.active and self.kActiveTextColor or self.kTextColor)
-
-                table.insert(self.parent.reasons, item.id)
-                self.parent:SetState(_G.GUIFeedbackState_End)
-
-                return true
-            end
-
-        end
-    end
-
-    return false
-
-end
-
-
-function GUIFeedbackState_Reason:UnInitialize()
-    for _, data in ipairs(self.reasonButtons) do
-        GUI.DestroyItem(data.button)
-    end
-    self.reasonButtons = nil
-
-    self.parent.background:SetSize(GUIScale(Vector(762, 389, 0)))
-    self.parent.content:SetSize(GUIScale(Vector(662, 300, 0)))
-
-end
-
-
-
 class 'GUIFeedbackState_End' (GUIFeedbackState)
 
 GUIFeedbackState_End.name ="GUIFeedbackState_End"
@@ -369,47 +209,6 @@ function GUIFeedbackState_End:Update()
 end
 
 
-local function GetTeamSkills()
-    local averagePlayerSkills = {
-        [kMarineTeamType] = {},
-        [kAlienTeamType] = {},
-        [3] = {},
-    }
-
-    for _, player in ipairs(GetEntitiesWithMixin("Scoring")) do
-
-        local skill = player:GetPlayerSkill() and math.max(player:GetPlayerSkill(), 0)
-        -- DebugPrint("%s skill: %s", ToString(player:GetName()), ToString(skill))
-
-        if skill then
-
-            local teamType = HasMixin(player, "Team") and player:GetTeamType() or -1
-            if teamType == kMarineTeamType or teamType == kAlienTeamType then
-                table.insert(averagePlayerSkills[teamType], skill)
-            end
-
-            table.insert(averagePlayerSkills[3], skill)
-
-        end
-
-    end
-
-    averagePlayerSkills[kMarineTeamType].mean = table.mean(averagePlayerSkills[kMarineTeamType])
-    averagePlayerSkills[kAlienTeamType].mean = table.mean(averagePlayerSkills[kAlienTeamType])
-    averagePlayerSkills[3].mean = table.mean(averagePlayerSkills[3])
-
-    averagePlayerSkills[kMarineTeamType].median = table.median(averagePlayerSkills[kMarineTeamType])
-    averagePlayerSkills[kAlienTeamType].median = table.median(averagePlayerSkills[kAlienTeamType])
-    averagePlayerSkills[3].median = table.median(averagePlayerSkills[3])
-
-    averagePlayerSkills[kMarineTeamType].standardDeviation = table.standardDeviation(averagePlayerSkills[kMarineTeamType])
-    averagePlayerSkills[kAlienTeamType].standardDeviation = table.standardDeviation(averagePlayerSkills[kAlienTeamType])
-    averagePlayerSkills[3].standardDeviation = table.standardDeviation(averagePlayerSkills[3])
-
-    return averagePlayerSkills
-end
-
-
 GUIFeedbackState_End.kStarIcon = PrecacheAssetSafe("ui/feedback/star.dds")
 GUIFeedbackState_End.kActiveStarIcon = PrecacheAssetSafe("ui/feedback/star_highlight.dds")
 GUIFeedbackState_End.kStarIconSize = Vector(116, 110, 0)
@@ -422,7 +221,7 @@ function GUIFeedbackState_End:InitializeStarButtons()
     for i = 1, 5 do
         local graphicItem = GUIManager:CreateGraphicItem()
         graphicItem:SetSize(GUIScale(self.kStarIconSize))
-        graphicItem:SetPosition(GUIScale(Vector(50 + (self.kStarIconSize.y) * (i - 1), 100, 0)))
+        graphicItem:SetPosition(GUIScale(Vector(50 + self.kStarIconSize.y * (i - 1), 100, 0)))
         graphicItem:SetTexture(rating >= i and self.kActiveStarIcon or self.kStarIcon)
 
         self.parent.content:AddChild(graphicItem)
@@ -476,10 +275,6 @@ function GUISquadSelect:Initialize()
 
     self:_InitializeBackground()
 
-
-    self:SetWaitLevel(Client.GetOptionInteger("feedback/wait_level", 1))
-    self:SetWaitTime(Client.GetOptionInteger("feedback/wait_time", 0))
-
     self:SetState(_G.GUIFeedbackState_Rating)
 
     self:SetIsVisible(false)
@@ -495,9 +290,6 @@ end
 
 function GUISquadSelect:Close()
     self.rating = -1
-
-    local waitLevel = self:GetWaitLevel()
-    self:SetWaitLevel(waitLevel + 1)
 
     self:SetState(_G.GUIFeedbackState_End)
     self:SetIsVisible(false)
@@ -564,11 +356,7 @@ function GUISquadSelect:SendKeyEvent(key, down)
     end
 
     return inputHandled
-
 end
-
-
-GUISquadSelect.kMinPlayTime =  3 * 60 --3 minutes
 
 
 function GUISquadSelect:Update(deltaTime)
@@ -581,15 +369,8 @@ function GUISquadSelect:Update(deltaTime)
         local gameInfo = GetGameInfoEntity()
 
         if gameInfo.isDedicated and not Client.feedbackSend and not self.shown
-                and ClientUI.GetScript("GUIGameEnd") and not ClientUI.GetScript("GUIGameEnd"):GetIsVisible()
-                and player:GetPlayTime() > self.kMinPlayTime and (Client.showFeedback or gameInfo:GetState() >= kGameState.Started) then
-            if self:GetWaitTime() == 0 then
-                self:SetIsVisible(true)
-            else
-                self:SetWaitTime(self:GetWaitTime() - 1)
-                self.rating = -1
-                self:SetState(_G.GUIFeedbackState_End)
-            end
+                and player:GetPlayTime() > 3 * 60 and (Client.showFeedback or gameInfo:GetState() >= kGameState.Started) then
+            self:SetIsVisible(true)
 
             self.shown = true
         end
@@ -603,40 +384,6 @@ function GUISquadSelect:Update(deltaTime)
             self:GetState():Update()
         end
     end
-
-end
-
-
-function GUISquadSelect:SetWaitLevel(level)
-    self.waitLevel = level
-
-    self:ResetWaitTime()
-end
-
-
-function GUISquadSelect:SetWaitTime(time)
-    self.waitTime = time
-end
-
-
-function GUISquadSelect:GetWaitLevel()
-    return self.waitLevel
-end
-
-
-function GUISquadSelect:GetWaitTime(time)
-    if self.waitTime < 0 then
-        self:ResetWaitTime()
-    end
-
-    return self.waitTime
-end
-
-
-function GUISquadSelect:ResetWaitTime()
-    local level = self:GetWaitLevel()
-
-    self.waitTime = level * level - level
 end
 
 
@@ -646,10 +393,7 @@ function GUISquadSelect:Uninitialize()
         self:SetIsVisible(false)
     end
 
-    Client.SetOptionInteger("feedback/wait_level", self:GetWaitLevel())
-    Client.SetOptionInteger("feedback/wait_time", self:GetWaitTime())
-
-    GUIAnimatedScript.Uninitialize(self)
+        GUIAnimatedScript.Uninitialize(self)
 
     local state = self:GetState()
     if state then
@@ -657,7 +401,6 @@ function GUISquadSelect:Uninitialize()
     end
 
     self:_UninitializeBackground()
-
 end
 
 
@@ -699,10 +442,7 @@ end
 
 
 function GUISquadSelect:_UninitializeBackground()
-
     GUI.DestroyItem(self.background)
     self.background = nil
-
     self.content = nil
-
 end
