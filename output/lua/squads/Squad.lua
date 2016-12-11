@@ -1,7 +1,7 @@
 class 'Squad'
 
 function Squad:OnCreate()
-    Print("SQUAD INIT")
+    Print("SQUAD INIT") -- NOTE never called
 end
 
 function Squad:Initialize(teamNumber, squadNumber)
@@ -14,6 +14,7 @@ end
 function Squad:AddPlayer(player)
     table.insertunique(self.playerIds, player:GetId())
     player.squadNumber = self.squadNumber
+    Log("player %s is now in squad %s", player:GetId(), player.squadNumber)
 end
 
 function Squad:RemovePlayer(player)

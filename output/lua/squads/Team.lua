@@ -12,8 +12,8 @@ end
 local oldTeamAddPlayer = Team.AddPlayer
 
 function Team:AddPlayer(player)
+	Log("ADDPLAYER %s to team %s", player:GetId(), self.teamName)
 	if (self.teamNumber == kTeam1Index or self.teamNumber == kTeam2Index) and player and player:isa("Player") then
-		Log("ADDPLAYER %s to team %s", player:GetId(), self.teamName)
 		self.squads[kSquadType.Invalid]:AddPlayer(player)
 	end
 	return oldTeamAddPlayer(self, player)
@@ -23,10 +23,9 @@ end
 local oldTeamRemovePlayer = Team.RemovePlayer
 
 function Team:RemovePlayer(player)
+	Log("REMOVEPLAYER %s from team %s", player:GetId(), self.teamName)
 	if (self.teamNumber == kTeam1Index or self.teamNumber == kTeam2Index) and player and player:isa("Player") then
-		Log("REMOVEPLAYER %s from team %s", player:GetId(), self.teamName)
 		local squad = player.squadNumber
-		Log("player squad: %s", player.squadNumber)
 		self.squads[squad]:RemovePlayer(player)
 	end
 	return oldTeamRemovePlayer(self, player)
