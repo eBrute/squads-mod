@@ -1,21 +1,18 @@
-Script.Load("lua/Globals.lua");
-local tins = table.insert;
-local trmv = table.removevalue;
+Script.Load("lua/Globals.lua")
 
-SquadsMemberMixin = {};
+SquadsMemberMixin = {}
 SquadsMemberMixin.type = "SquadsMember"
 
 function SquadsMemberMixin:__initmixin()
-    self.squadNumber = kSquadType.Invalid;
+    self.squadNumber = kSquadType.Invalid
+end
+
+function SquadsMemberMixin:GetSquadNumber()
+    return self.squadNumber
 end
 
 function SquadsMemberMixin:GetSquad()
-    return self.squadNumber;
-end
-
-function SquadsMemberMixin:SetSquad(newsquad)
-	local oldsquad = self.squadNumber;
-	local team = self:GetTeam();
-	trmv(team.squads[oldsquad], self);
-	tins(team.squads[newsquad], self);
+	local team = self:GetTeam()
+	local squad = self.squadNumber
+	return team.squads[squad] or nil
 end
