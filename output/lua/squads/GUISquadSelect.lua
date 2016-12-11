@@ -36,11 +36,15 @@ function GUIFeedbackState:GetIsMouseOver(overItem)
 
 end
 
+
 function GUIFeedbackState:UnInitialize() end
+
+
 
 class 'GUIFeedbackState_Rating' (GUIFeedbackState)
 
 GUIFeedbackState_Rating.name = "GUIFeedbackState_Rating"
+
 function GUIFeedbackState_Rating:OnClick()
 
     if self.stars then
@@ -85,6 +89,7 @@ GUIFeedbackState_Rating.kSounds = {
     click = "sound/NS2.fev/common/button_click"
 }
 
+
 function GUIFeedbackState_Rating:Initialize(guiElement)
     self.parent = guiElement
 
@@ -103,6 +108,7 @@ function GUIFeedbackState_Rating:Initialize(guiElement)
 
     self:InitializeStarButtons()
 end
+
 
 function GUIFeedbackState_Rating:Update()
     if self.stars then
@@ -144,6 +150,7 @@ GUIFeedbackState_Rating.kStarIcon = PrecacheAssetSafe("ui/feedback/star.dds")
 GUIFeedbackState_Rating.kActiveStarIcon = PrecacheAssetSafe("ui/feedback/star_highlight.dds")
 GUIFeedbackState_Rating.kStarIconSize = Vector(116, 110, 0)
 
+
 function GUIFeedbackState_Rating:InitializeStarButtons()
     self.stars = {}
 
@@ -166,6 +173,7 @@ function GUIFeedbackState_Rating:InitializeStarButtons()
     end
 end
 
+
 function GUIFeedbackState_Rating:UnInitialize()
     if self.stars then
         for i = 1, 5 do
@@ -183,6 +191,8 @@ function GUIFeedbackState_Rating:UnInitialize()
     end
 end
 
+
+
 class 'GUIFeedbackState_Reason' (GUIFeedbackState)
 
 GUIFeedbackState_Reason.name = "GUIFeedbackState_Reason"
@@ -196,6 +206,7 @@ GUIFeedbackState_Reason.Reasons = {
     {16, "FEEDBACK_REASON_16"}, -- other_reason_2
 }
 
+
 local function ShuffleSkipLast( tmp )
     for i = #tmp - 1, 2, -1 do
         local j = math.random( i )
@@ -208,6 +219,7 @@ GUIFeedbackState_Reason.reassonActiveColor = Color(1, 1, 1, 1)
 
 GUIFeedbackState_Reason.kTextColor = Color(kMarineFontColor)
 GUIFeedbackState_Reason.kActiveTextColor = kAlienFontColor
+
 
 function GUIFeedbackState_Reason:Initialize(guiElement)
     self.parent = guiElement
@@ -236,6 +248,7 @@ function GUIFeedbackState_Reason:Initialize(guiElement)
     end
 
 end
+
 
 function GUIFeedbackState_Reason:CreateButton(topOffset, text, id)
     local buttonBackground = GUIManager:CreateGraphicItem()
@@ -293,6 +306,7 @@ function GUIFeedbackState_Reason:Update()
     end
 end
 
+
 function GUIFeedbackState_Reason:OnClick()
 
     if self.reasonButtons then
@@ -315,6 +329,7 @@ function GUIFeedbackState_Reason:OnClick()
 
 end
 
+
 function GUIFeedbackState_Reason:UnInitialize()
     for _, data in ipairs(self.reasonButtons) do
         GUI.DestroyItem(data.button)
@@ -326,9 +341,12 @@ function GUIFeedbackState_Reason:UnInitialize()
 
 end
 
+
+
 class 'GUIFeedbackState_End' (GUIFeedbackState)
 
 GUIFeedbackState_End.name ="GUIFeedbackState_End"
+
 
 function GUIFeedbackState_End:Initialize(guiElement)
     self.parent = guiElement
@@ -339,14 +357,17 @@ function GUIFeedbackState_End:Initialize(guiElement)
 
     self:InitializeStarButtons()
 
-    self:SendReport()
+    Client.showFeedback = false
+    Client.feedbackSend = true
 end
+
 
 function GUIFeedbackState_End:Update()
     if self.closeTime < Shared.GetTime() then
         self.parent:ResetState()
     end
 end
+
 
 local function GetTeamSkills()
     local averagePlayerSkills = {
@@ -388,83 +409,11 @@ local function GetTeamSkills()
     return averagePlayerSkills
 end
 
-function GUIFeedbackState_End:SendReport()
-    local rating = self.parent.rating -- int, 1 to 5
-    local reasons = self.parent.reasons
-
-    local player = Client.GetLocalPlayer()
-    local gameInfo = GetGameInfoEntity()
-
-    local playerSkills = gameInfo.prevTeamsSkills or GetTeamSkills() --table with floats
-    local playerSkill = player:GetPlayerSkill()
-    local playerLevel = player:GetPlayerLevel()
-
-    local marineCount = #playerSkills[kMarineTeamType] --int
-    local alienCount = #playerSkills[kAlienTeamType] --int
-
-    local gameEnded = Client.showFeedback or gameInfo:GetGameEnded() --boolean
-    local winner = gameInfo.prevWinner or 0 -- int, refers to kTeamTypes
-    local gameTime = PlayerUI_GetGameLengthTime() --int
-
-    local steamid = Client.GetSteamId() --int
-    local playtime = player:GetPlayTime()
-
-    local servername = Client.GetConnectedServerName() --string
-    local serverip = gameInfo.serverIp --string
-    local serverport = gameInfo.serverPort --string
-
-    local mapname = Shared.GetMapName() --string
-    local gamemode = GetGamemode and GetGamemode() or "unknown" --string
-
-    local playerteam = player:GetLastTeam() --int
-
-    local data =
-    {
-        server = {
-            ip = serverip,
-            port = serverport,
-            name = servername
-        },
-        player = {
-            steamid = steamid,
-            skill = playerSkill,
-            level = playerLevel,
-            team = playerteam,
-            play_time = playtime
-        },
-        round = {
-            map = mapname,
-            gamemode = gamemode,
-            ended = gameEnded,
-            winner = winner,
-            length = gameTime,
-            marines = {
-                count = marineCount,
-                skill = playerSkills[kMarineTeamType].median,
-                standardDeviation = playerSkills[kMarineTeamType].standardDeviation
-            },
-            aliens = {
-                count = alienCount,
-                skill = playerSkills[kAlienTeamType].median,
-                standardDeviation = playerSkills[kAlienTeamType].standardDeviation
-            }
-        },
-        feedback = {
-            rating = rating,
-            reasons = reasons
-        }
-    }
-
-    Analytics.RecordFeedback( data )
-
-    --flag player to have send the report for this round
-    Client.showFeedback = false
-    Client.feedbackSend = true
-end
 
 GUIFeedbackState_End.kStarIcon = PrecacheAssetSafe("ui/feedback/star.dds")
 GUIFeedbackState_End.kActiveStarIcon = PrecacheAssetSafe("ui/feedback/star_highlight.dds")
 GUIFeedbackState_End.kStarIconSize = Vector(116, 110, 0)
+
 
 function GUIFeedbackState_End:InitializeStarButtons()
     self.stars = {}
@@ -483,6 +432,7 @@ function GUIFeedbackState_End:InitializeStarButtons()
     end
 end
 
+
 function GUIFeedbackState_End:UnInitialize()
     if self.stars then
         for i = 1, 5 do
@@ -492,6 +442,8 @@ function GUIFeedbackState_End:UnInitialize()
 
     self.stars = nil
 end
+
+
 
 class 'GUISquadSelect' (GUIAnimatedScript)
 
@@ -507,6 +459,7 @@ function GUISquadSelect:GetIsVisible()
     return self.isVisible
 end
 
+
 function GUISquadSelect:OnResolutionChanged(oldX, oldY, newX, newY)
     local visible = self:GetIsVisible()
 
@@ -515,6 +468,7 @@ function GUISquadSelect:OnResolutionChanged(oldX, oldY, newX, newY)
 
     self:SetIsVisible(visible)
 end
+
 
 function GUISquadSelect:Initialize()
 
@@ -531,11 +485,13 @@ function GUISquadSelect:Initialize()
     self:SetIsVisible(false)
 end
 
+
 function GUISquadSelect:ResetState()
     self:SetIsVisible(false)
 
     self:SetState(_G.GUIFeedbackState_Rating)
 end
+
 
 function GUISquadSelect:Close()
     self.rating = -1
@@ -547,6 +503,7 @@ function GUISquadSelect:Close()
     self:SetIsVisible(false)
 end
 
+
 function GUISquadSelect:SetIsVisible(visible)
     self.isVisible = visible
 
@@ -556,6 +513,7 @@ function GUISquadSelect:SetIsVisible(visible)
 
     SetKeyEventBlocker(visible and self or nil)
 end
+
 
 function GUISquadSelect:SetState(state)
     if self.state == state then return end
@@ -569,9 +527,11 @@ function GUISquadSelect:SetState(state)
     self.state:Initialize(self)
 end
 
+
 function GUISquadSelect:GetState()
     return self.state and self.state.parent.state --Todo: find out why this is needed
 end
+
 
 function GUISquadSelect:SendKeyEvent(key, down)
 
@@ -607,7 +567,9 @@ function GUISquadSelect:SendKeyEvent(key, down)
 
 end
 
+
 GUISquadSelect.kMinPlayTime =  3 * 60 --3 minutes
+
 
 function GUISquadSelect:Update(deltaTime)
     PROFILE("GUISquadSelect:Update")
@@ -644,19 +606,23 @@ function GUISquadSelect:Update(deltaTime)
 
 end
 
+
 function GUISquadSelect:SetWaitLevel(level)
     self.waitLevel = level
 
     self:ResetWaitTime()
 end
 
+
 function GUISquadSelect:SetWaitTime(time)
     self.waitTime = time
 end
 
+
 function GUISquadSelect:GetWaitLevel()
     return self.waitLevel
 end
+
 
 function GUISquadSelect:GetWaitTime(time)
     if self.waitTime < 0 then
@@ -665,6 +631,7 @@ function GUISquadSelect:GetWaitTime(time)
 
     return self.waitTime
 end
+
 
 function GUISquadSelect:ResetWaitTime()
     local level = self:GetWaitLevel()
@@ -692,6 +659,7 @@ function GUISquadSelect:Uninitialize()
     self:_UninitializeBackground()
 
 end
+
 
 function GUISquadSelect:_InitializeBackground()
 
@@ -728,6 +696,7 @@ function GUISquadSelect:_InitializeBackground()
     self.content:AddChild(self.question)
 
 end
+
 
 function GUISquadSelect:_UninitializeBackground()
 
