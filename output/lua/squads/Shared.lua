@@ -1,4 +1,4 @@
-local function OnShowSquads()
+local function OnDumpSquads()
     local teams = GetGamerules():GetTeams()
     for t = 1, #teams do
         Log("Squads for team %d", teams[t].teamNumber)
@@ -7,4 +7,6 @@ local function OnShowSquads()
         end
     end
 end
-Event.Hook("Console_show_squads", OnShowSquads)
+Event.Hook("Console_dump_squads", OnDumpSquads)
+
+Shared.RegisterNetworkMessage("ShowSquadSelect")
