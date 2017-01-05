@@ -17,11 +17,11 @@ end
 function Squad:AddPlayer(player)
     table.insertunique(self.playerIds, player:GetId())
     player:SetSquadNumber(self.squadNumber)
-    Log("Player %s is now in squad %s", player:GetId(), self.squadNumber)
+    Log("Player %s is now in Squad %s", player:GetId(), self.squadNumber)
 end
 
 function Squad:RemovePlayer(player)
-    Log("Player %s removed from squad %s", player:GetId(), self.squadNumber)
+    Log("Player %s removed from Squad %s", player:GetId(), self.squadNumber)
     table.removevalue(self.playerIds, player:GetId())
     player:SetSquadNumber(kSquadType.Invalid)
 end

@@ -41,22 +41,21 @@ end
 
 function SquadMemberMixin:OnEntityChange(oldEntityId, newEntityId)
     if not Server then return end
-    if not oldEntityId or not newEntityId then return end -- TODO catch nil->N, N->nil ?
+    if not oldEntityId or not newEntityId then return end -- only interested in changes, not in creation/destruction (handled by team)
 
     local oldPlayer = Shared.GetEntity(oldEntityId)
     if not oldPlayer or not oldPlayer:isa("Player") then return end
+
     local oldSquad = oldPlayer:GetSquad() -- this is the squad we were in
-
-    local newPlayer = Shared.GetEntity(newEntityId)
-    if not newPlayer or not newPlayer:isa("Player") then return end
-    local newSquad = newPlayer:GetSquad() -- new player already has the default squad because NS2Gamerules:OnEntityCreate joined the team
-
     if oldSquad then
         oldSquad:RemovePlayer(oldPlayer) -- oldPlayer is about to be destroyed, so remove him
     end
 
+    local newPlayer = Shared.GetEntity(newEntityId)
+    if not newPlayer or not newPlayer:isa("Player") then return end
     if oldPlayer:GetTeamNumber() == newPlayer:GetTeamNumber() then
         -- change occured in the same team (i.e. marine -> exo), so carry over the squad to the new entity
+        local newSquad = newPlayer:GetSquad() -- new player already has the default squad because NS2Gamerules:OnEntityCreate joined the team
         if newSquad then
             newSquad:RemovePlayer(newPlayer)  -- remove the new player from the default squad
         end

@@ -7,7 +7,6 @@ local oldTeamAddPlayer = Team.AddPlayer
 
 function Team:AddPlayer(player)
 	Log("ADDPLAYER %s to team %s", player:GetId(), self.teamName)
-	Log("ADDPLAYER initial playerteam: %s", player:GetTeamNumber())
 	if HasMixin(self, "SquadTeam") and player and player:isa("Player") then
 		self:AddPlayerToSquadTeam(player)
 	end
@@ -18,7 +17,6 @@ local oldTeamRemovePlayer = Team.RemovePlayer
 
 function Team:RemovePlayer(player)
 	Log("REMOVEPLAYER %s from team %s", player:GetId(), self.teamName)
-	Log("REMOVEPLAYER initial playerteam: %s", player:GetTeamNumber())
 	if HasMixin(self, "SquadTeam") and player and player:isa("Player") then
 		self:RemovePlayerFromSquadTeam(player)
 	end
