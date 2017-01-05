@@ -1,9 +1,9 @@
-Script.Load("lua/squads/SquadsMemberMixin.lua")
+Script.Load("lua/squads/SquadMemberMixin.lua")
 local oldPlayerOnCreate = Player.OnCreate
 
 function Player:OnCreate()
 	oldPlayerOnCreate(self)
-	InitMixin(self, SquadsMemberMixin)
+	InitMixin(self, SquadMemberMixin)
 end
 
 

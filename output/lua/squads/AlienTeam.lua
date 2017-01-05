@@ -1,11 +1,8 @@
-Script.Load("lua/squads/Squad.lua")
+Script.Load("lua/squads/SquadTeamMixin.lua")
 
 local oldAlienTeamInitialize = AlienTeam.Initialize
 
 function AlienTeam:Initialize(teamName, teamNumber)
 	oldAlienTeamInitialize(self, teamName, teamNumber)
-	for squadNumber = 1, #kSquadType do
-		self.squads[squadNumber] = Squad()
-		self.squads[squadNumber]:Initialize(teamNumber, squadNumber)
-	end
+	InitMixin(self, SquadTeamMixin, {teamName = teamName, teamNumber = teamNumber})
 end

@@ -13,13 +13,13 @@ end
 
 function Squad:AddPlayer(player)
     table.insertunique(self.playerIds, player:GetId())
-    player.squadNumber = self.squadNumber
+    player:SetSquadNumber(self.squadNumber)
     Log("player %s is now in squad %s", player:GetId(), player.squadNumber)
 end
 
 function Squad:RemovePlayer(player)
     table.removevalue(self.playerIds, player:GetId())
-    player.squadNumber = kSquadType.Invalid
+    player:SetSquadNumber(kSquadType.Invalid)
 end
 
 function Squad:RemovePlayerById(playerId)
@@ -39,6 +39,12 @@ function Squad:GetNumber()
 end
 
 function Squad:Reset()
+    for _, playerId in ipairs(self.playerIds) do
+        local player = Shared.GetEntity(playerId)
+        if player and player:isa("Player") and HasMixin(player, "SquadMember") then
+            player:SetSquadNumber(kSquadType.Invalid)
+        end
+    end
     self.playerIds = {}
 end
 

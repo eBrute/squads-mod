@@ -1,9 +1,10 @@
 local function OnDumpSquads()
     local teams = GetGamerules():GetTeams()
     for t = 1, #teams do
-        Log("Squads for team %d", teams[t].teamNumber)
-        for i = 1, #teams[t].squads do
-            teams[t].squads[i]:Dump()
+        local team = teams[t]
+        if team and HasMixin(team, "SquadTeam") then
+            Log("Squads for team %d", teams[t].teamNumber)
+            teams[t]:DumpSquads()
         end
     end
 end

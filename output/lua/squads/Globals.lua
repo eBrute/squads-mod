@@ -1,7 +1,8 @@
 kMaxSquadsMembersPerSquad = 6
 
 kSquadType = enum {
-	"Invalid",
+	[0] = "Invalid",
+	"Unassigned",
 	"Red",
 	"Green",
 	"Blue",
@@ -13,6 +14,7 @@ kSquadType = enum {
 }
 
 kSquadNames = {
+	[0] = "Invalid",
 	"Unassigned",
 	"Red Squad",
 	"Green Squad",
