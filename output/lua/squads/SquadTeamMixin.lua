@@ -1,13 +1,14 @@
+-- a squadteam is a team that has several squads
+-- the squadteam informs the squads about joining/leaving players
+
 Script.Load("lua/Globals.lua")
 Script.Load("lua/squads/Squad.lua")
 
-SquadTeamMixin = {}
+SquadTeamMixin = CreateMixin(SquadTeamMixin)
 SquadTeamMixin.type = "SquadTeam"
 
 function SquadTeamMixin:__initmixin()
     self.squads = {}
-    Log("Initialize SquadTeam")
-    Log("__mixindata: %s", self.__mixindata)
 	for squadNumber = 1, #kSquadType do
 		self.squads[squadNumber] = Squad()
 		self.squads[squadNumber]:Initialize(self.__mixindata.teamNumber, squadNumber)
@@ -16,7 +17,9 @@ end
 
 
 function SquadTeamMixin:GetSquad(squadNumber)
-    return self.squads[squadNumber]
+    if squadNumber ~= kSquadType.Invalid then
+        return self.squads[squadNumber]
+    end
 end
 
 
@@ -42,12 +45,16 @@ end
 
 
 function SquadTeamMixin:AddPlayerToSquad(player, squadNumber)
-    self.squads[squadNumber]:AddPlayer(player)
+    if squadNumber ~= kSquadType.Invalid then
+        self.squads[squadNumber]:AddPlayer(player)
+    end
 end
 
 
 function SquadTeamMixin:RemovePlayerFromSquad(player, squadNumber)
-    self.squads[squadNumber]:RemovePlayer(player)
+    if squadNumber ~= kSquadType.Invalid then
+        self.squads[squadNumber]:RemovePlayer(player)
+    end
 end
 
 

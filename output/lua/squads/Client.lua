@@ -16,5 +16,11 @@ local function ToggleSquadSelectMenu()
     end
 end
 
-Event.Hook("Console_select_squad", ToggleSquadSelectMenu)
+Event.Hook("Console_squad_menu", ToggleSquadSelectMenu)
 Client.HookNetworkMessage("ShowSquadSelect", ShowSquadSelectMenu)
+
+
+local function SelectSquad(squadNumber)
+    Client.SendNetworkMessage("SelectSquad", {squadNumber = squadNumber}, true)
+end
+Event.Hook("Console_select_squad", SelectSquad)
