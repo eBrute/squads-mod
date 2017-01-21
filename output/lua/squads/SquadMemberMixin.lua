@@ -7,6 +7,10 @@ Script.Load("lua/Globals.lua")
 SquadMemberMixin = CreateMixin(SquadMemberMixin)
 SquadMemberMixin.type = "SquadMember"
 
+SquadMemberMixin.networkVars = {
+  squadNumber = "enum kSquadType"
+}
+
 function SquadMemberMixin:__initmixin()
     self.squadNumber = kSquadType.Invalid
 end
