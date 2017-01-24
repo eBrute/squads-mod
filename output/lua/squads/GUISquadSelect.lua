@@ -1,261 +1,129 @@
--- ======= Copyright (c) 2003-2016, Unknown Worlds Entertainment, Inc. All rights reserved. =======
---
--- lua\GUISquadSelect.lua
---
--- Created by: Sebastian Schuck (sebastian@naturalselection2.com
---
--- Round Feedback UI to collect users feedback about the game after each play seesion or round.
---
--- ========= For more information, visit us at http://www.unknownworlds.com =====================
+Script.Load("lua/Globals.lua")
 
-Script.Load("lua/GUIAnimatedScript.lua")
+class 'GUISquadSelect' (GUIScript)
 
-class 'GUIFeedbackState'
-
-GUIFeedbackState.name = "GUIFeedbackState"
-
-function GUIFeedbackState:Initialize(guiElement) end
-
-function GUIFeedbackState:Update() end
-
-function GUIFeedbackState:OnClick(mouseX, mouseY)
-    return false
-end
-
---
--- Checks if the mouse is over the passed in GUIItem and plays a sound if it has just moved over.
---
-function GUIFeedbackState:GetIsMouseOver(overItem)
-
-    local mouseOver = GUIItemContainsPoint(overItem, Client.GetCursorPosScreen())
-    if mouseOver and not self.mouseOverStates[overItem] then
-        MarineBuy_OnMouseOver()
-    end
-    self.mouseOverStates[overItem] = mouseOver
-    return mouseOver
-
-end
-
-
-function GUIFeedbackState:UnInitialize() end
-
-
-
-class 'GUIFeedbackState_Rating' (GUIFeedbackState)
-
-GUIFeedbackState_Rating.name = "GUIFeedbackState_Rating"
-
-function GUIFeedbackState_Rating:OnClick()
-
-    if self.stars then
-        for i = 1, #self.stars do
-
-            local item = self.stars[i]
-            if self:GetIsMouseOver(item.Button) then
-
-                StartSoundEffect(self.kSounds.click)
-
-                self.parent.rating = i
-                self.parent:SetState(_G.GUIFeedbackState_End)
-
-                return true
-            end
-
-        end
-    end
-
-    if self:GetIsMouseOver(self.close) then
-        StartSoundEffect(self.kSounds.click)
-        self.parent:Close()
-
-        return true
-    end
-
-    return false
-
-end
-
-GUIFeedbackState_Rating.kSounds = {
-    hovar = "sound/NS2.fev/common/hovar",
-    click = "sound/NS2.fev/common/button_click"
-}
-
-
-function GUIFeedbackState_Rating:Initialize(guiElement)
-    self.parent = guiElement
-
-    self.mouseOverStates = { }
-
-    self.parent.question:SetText(Locale.ResolveString("FEEDBACK_RATEROUND"))
-
-    self.close = GUIManager:CreateGraphicItem()
-    self.close:SetAnchor(GUIItem.Right, GUIItem.Top)
-    self.close:SetTexture(PrecacheAssetSafe("ui/menu/serverbrowser/close.dds"))
-    self.close:SetSize(GUIScale(Vector(54 ,54 , 0)))
-    self.close:SetPosition(GUIScale(Vector(-74 ,20 , 0)))
-    self.close:SetColor(Color(0.92, 0.92, 0.92))
-
-    self.parent.background:AddChild(self.close)
-
-    self:InitializeStarButtons()
-end
-
-
-function GUIFeedbackState_Rating:Update()
-    if self.stars then
-        for i, star in ipairs(self.stars) do
-
-            if self:GetIsMouseOver(star.Button) then
-
-                if not star.over then
-                    StartSoundEffect(self.kSounds.hovar)
-                    star.over = true
-                end
-
-                for j = 1, i do
-                    local item = self.stars[j]
-                    item.Highlight:SetIsVisible(true)
-                end
-            else
-                star.Highlight:SetIsVisible(false)
-                star.over = false
-            end
-
-        end
-
-        if self:GetIsMouseOver(self.close) then
-            self.close:SetColor(Color(1, 1, 1))
-
-            if not self.close.over then
-                StartSoundEffect(self.kSounds.hovar)
-                self.close.over = true
-            end
-        else
-            self.close:SetColor(Color(0.92, 0.92, 0.92))
-            self.close.over = false
-        end
-    end
-end
-
-GUIFeedbackState_Rating.kStarIcon = PrecacheAssetSafe("ui/feedback/star.dds")
-GUIFeedbackState_Rating.kActiveStarIcon = PrecacheAssetSafe("ui/feedback/star_highlight.dds")
-GUIFeedbackState_Rating.kStarIconSize = Vector(116, 110, 0)
-
-
-function GUIFeedbackState_Rating:InitializeStarButtons()
-    self.stars = {}
-
-    for i = 1, 5 do
-        local graphicItem = GUIManager:CreateGraphicItem()
-        graphicItem:SetSize(GUIScale(self.kStarIconSize))
-        graphicItem:SetPosition(GUIScale(Vector(50 + self.kStarIconSize.y * (i - 1),100, 0)))
-        graphicItem:SetTexture(self.kStarIcon)
-
-        self.parent.content:AddChild(graphicItem)
-
-        local graphicItemActive = GUIManager:CreateGraphicItem()
-        graphicItemActive:SetSize(GUIScale(self.kStarIconSize))
-        graphicItemActive:SetTexture(self.kActiveStarIcon)
-        graphicItemActive:SetIsVisible(false)
-
-        graphicItem:AddChild(graphicItemActive)
-
-        self.stars[i] = { Button = graphicItem, Highlight = graphicItemActive }
-    end
-end
-
-
-function GUIFeedbackState_Rating:UnInitialize()
-    if self.stars then
-        for i = 1, 5 do
-            GUI.DestroyItem(self.stars[i].Button)
-            GUI.DestroyItem(self.stars[i].Highlight)
-        end
-
-        self.stars = nil
-    end
-
-    if self.close then
-        GUI.DestroyItem(self.close)
-
-        self.close = nil
-    end
-end
-
-
-class 'GUIFeedbackState_End' (GUIFeedbackState)
-
-GUIFeedbackState_End.name ="GUIFeedbackState_End"
-
-
-function GUIFeedbackState_End:Initialize(guiElement)
-    self.parent = guiElement
-
-    self.closeTime = Shared.GetTime() + 2
-
-    self.parent.question:SetText(Locale.ResolveString("FEEDBACK_THANKS"))
-
-    self:InitializeStarButtons()
-
-    Client.showFeedback = false
-    Client.feedbackSend = true
-end
-
-
-function GUIFeedbackState_End:Update()
-    if self.closeTime < Shared.GetTime() then
-        self.parent:ResetState()
-    end
-end
-
-
-GUIFeedbackState_End.kStarIcon = PrecacheAssetSafe("ui/feedback/star.dds")
-GUIFeedbackState_End.kActiveStarIcon = PrecacheAssetSafe("ui/feedback/star_highlight.dds")
-GUIFeedbackState_End.kStarIconSize = Vector(116, 110, 0)
-
-
-function GUIFeedbackState_End:InitializeStarButtons()
-    self.stars = {}
-
-    local rating = self.parent.rating
-    for i = 1, 5 do
-        local graphicItem = GUIManager:CreateGraphicItem()
-        graphicItem:SetSize(GUIScale(self.kStarIconSize))
-        graphicItem:SetPosition(GUIScale(Vector(50 + self.kStarIconSize.y * (i - 1), 100, 0)))
-        graphicItem:SetTexture(rating >= i and self.kActiveStarIcon or self.kStarIcon)
-
-        self.parent.content:AddChild(graphicItem)
-
-        self.stars[i] = graphicItem
-
-    end
-end
-
-
-function GUIFeedbackState_End:UnInitialize()
-    if self.stars then
-        for i = 1, 5 do
-            GUI.DestroyItem(self.stars[i])
-        end
-    end
-
-    self.stars = nil
-end
-
-
-
-class 'GUISquadSelect' (GUIAnimatedScript)
-
-GUISquadSelect.kFont = Fonts.kAgencyFB_Large_Bold
-
-GUISquadSelect.kTextColor = kMarineFontColor
-GUISquadSelect.kActiveTextColor = kAlienFontColor
+GUISquadSelect.kSquadNameFont = Fonts.kAgencyFB_Large_Bold
+GUISquadSelect.kSquadPlayerFont = Fonts.kKartika_Medium
 
 GUISquadSelect.kBackgroundTexture = PrecacheAssetSafe("ui/feedback/background.dds")
+GUISquadSelect.kFrameTexture = PrecacheAssetSafe("ui/squads/frame.dds")
+GUISquadSelect.kLongFrameTexture = PrecacheAssetSafe("ui/squads/longframe.dds")
 GUISquadSelect.kFeedbackIconTexture = PrecacheAssetSafe("ui/feedback/feedback_icon.dds")
+GUISquadSelect.kSquadBackgrounds = {}
+for i, texture in pairs(kSquadMenuBackgroundTextures) do
+    if type(texture) == "string" and not GUISquadSelect.kSquadBackgrounds[i] then
+        Log("precaching %s", texture)
+        GUISquadSelect.kSquadBackgrounds[i] = PrecacheAssetSafe(texture)
+    end
+end
+
+
+local function transparentColor(c, a)
+    return Color(c.r, c.g, c.b, a)
+end
+
+
+local function ScaledCoords(x, y)
+    return GUIScale(Vector(x, y, 0))
+end
+
+
+function GUISquadSelect:Initialize()
+    GUIAnimatedScript.Initialize(self)
+    self:_InitializeBackground()
+    self:SetIsVisible(false)
+end
+
 
 function GUISquadSelect:GetIsVisible()
     return self.isVisible
+end
+
+
+function GUISquadSelect:SetIsVisible(visible)
+    self.isVisible = visible
+    --self.background:SetIsVisible(visible)
+    MouseTracker_SetIsVisible(visible)
+    SetKeyEventBlocker(visible and self or nil)
+end
+
+
+function GUISquadSelect:Close()
+    self:SetIsVisible(false)
+end
+
+
+function GUISquadSelect:SendKeyEvent(key, down)
+    local inputHandled = false
+    if self.isVisible then
+        if key == InputKey.MouseButton0 and self.mousePressed ~= down then
+            self.mousePressed = down
+            if down then
+                -- inputHandled = self:OnClick()
+            end
+        end
+
+        if key == InputKey.Escape and down then
+            self:Close()
+            inputHandled = true
+        end
+
+        -- No matter what, this menu consumes MouseButton0 clicks.
+        if key == InputKey.MouseButton0 and down then
+            inputHandled = true
+        end
+    end
+
+    return inputHandled
+end
+
+
+function GUISquadSelect:Update(deltaTime)
+    PROFILE("GUISquadSelect:Update")
+
+    if self.isVisible then
+        local player = Client.GetLocalPlayer()
+        local teamNumber = player:GetTeamNumber()
+        local players = GetScoreData({ teamNumber })
+        -- local gameInfo = GetGameInfoEntity()
+
+        for squad = 1 , #self.SquadRegions do
+            local region = self.SquadRegions[squad]
+            local mouseOver = GUIItemContainsPoint(region.background, Client.GetCursorPosScreen())
+            if (mouseOver) then
+                region.background:SetColor( transparentColor(kSquadMenuBackgroundColors[squad], 0.5) )
+            else
+                region.background:SetColor( transparentColor(kSquadMenuBackgroundColors[0], 0.5) )
+            end
+
+            -- add all playerslots in reverse order
+            local unusedPlayerSlots = {}
+            for i = #region.players, 1, -1 do
+                table.insert(unusedPlayerSlots, region.players[i])
+            end
+
+            -- add all players of this squad
+            for p = 1, #players do
+                -- Log("name %s, team %s, squad %s", players[p].Name, players[p].EntityTeamNumber, players[p].SquadNumber )
+                if players[p].EntityTeamNumber == teamNumber and players[p].SquadNumber == squad and #unusedPlayerSlots > 0 then
+                    unusedPlayerSlots[#unusedPlayerSlots]:SetText(players[p].Name)
+                    -- IsCommander
+                    -- IsSteamFriend
+                    table.remove(unusedPlayerSlots)
+                end
+            end
+
+            -- remove unused players from list
+            for i = 1, #unusedPlayerSlots do
+                unusedPlayerSlots[i]:SetText('')
+            end
+        end
+
+        --Some mods may interfere with us
+        if not MouseTracker_GetIsVisible() then
+            MouseTracker_SetIsVisible(true)
+        end
+    end
 end
 
 
@@ -269,135 +137,15 @@ function GUISquadSelect:OnResolutionChanged(oldX, oldY, newX, newY)
 end
 
 
-function GUISquadSelect:Initialize()
-
-    GUIAnimatedScript.Initialize(self)
-
-    self:_InitializeBackground()
-
-    self:SetState(_G.GUIFeedbackState_Rating)
-
-    self:SetIsVisible(false)
-end
-
-
-function GUISquadSelect:ResetState()
-    self:SetIsVisible(false)
-
-    self:SetState(_G.GUIFeedbackState_Rating)
-end
-
-
-function GUISquadSelect:Close()
-    self.rating = -1
-
-    self:SetState(_G.GUIFeedbackState_End)
-    self:SetIsVisible(false)
-end
-
-
-function GUISquadSelect:SetIsVisible(visible)
-    self.isVisible = visible
-
-    self.background:SetIsVisible(visible)
-
-    MouseTracker_SetIsVisible(visible)
-
-    SetKeyEventBlocker(visible and self or nil)
-end
-
-
-function GUISquadSelect:SetState(state)
-    if self.state == state then return end
-
-    if self.state then
-        self.state:UnInitialize(self)
-    end
-
-    self.state = state
-
-    self.state:Initialize(self)
-end
-
-
-function GUISquadSelect:GetState()
-    return self.state and self.state.parent.state --Todo: find out why this is needed
-end
-
-
-function GUISquadSelect:SendKeyEvent(key, down)
-
-    local inputHandled = false
-
-    if self.isVisible then
-
-        if key == InputKey.MouseButton0 and self.mousePressed ~= down then
-
-            self.mousePressed = down
-
-            local state =  self:GetState()
-
-            if down and state then
-                inputHandled = state:OnClick()
-            end
-        end
-
-
-        if key == InputKey.Escape and down then
-            self:Close()
-            inputHandled = true
-        end
-
-        -- No matter what, this menu consumes MouseButton0 clicks.
-        if key == InputKey.MouseButton0 and down then
-            inputHandled = true
-        end
-
-    end
-
-    return inputHandled
-end
-
-
-function GUISquadSelect:Update(deltaTime)
-    PROFILE("GUISquadSelect:Update")
-
-    GUIAnimatedScript.Update(self, deltaTime)
-
-    if not self.isVisible then
-        local player = Client.GetLocalPlayer()
-        local gameInfo = GetGameInfoEntity()
-
-        if gameInfo.isDedicated and not Client.feedbackSend and not self.shown
-                and player:GetPlayTime() > 3 * 60 and (Client.showFeedback or gameInfo:GetState() >= kGameState.Started) then
-            self:SetIsVisible(true)
-
-            self.shown = true
-        end
-    else
-        --Some mods may interfere with us
-        if not MouseTracker_GetIsVisible() then
-            MouseTracker_SetIsVisible(true)
-        end
-
-        if self:GetState() then
-            self:GetState():Update()
-        end
-    end
-end
-
-
 function GUISquadSelect:Uninitialize()
 
     if self:GetIsVisible() then
         self:SetIsVisible(false)
     end
 
-        GUIAnimatedScript.Uninitialize(self)
-
-    local state = self:GetState()
-    if state then
-        state:UnInitialize()
+    if self.close then
+        GUI.DestroyItem(self.close)
+        self.close = nil
     end
 
     self:_UninitializeBackground()
@@ -406,43 +154,106 @@ end
 
 function GUISquadSelect:_InitializeBackground()
 
-    self.background = GUIManager:CreateGraphicItem()
-    self.background:SetSize(GUIScale(Vector(762, 389, 0)))
-    self.background:SetPosition(GUIScale(Vector(-381, -295, 0)))
-    self.background:SetAnchor(GUIItem.Middle, GUIItem.Center)
-    self.background:SetTexture(self.kBackgroundTexture)
-    self.background:SetColor(Color(0.85, 0.85, 0.85, 0.85))
-    self.background:SetLayer(kGUILayerMainMenuDialogs)
+    local margin = {top = 42, bottom = 42, left = 42, right = 42}
+    local gap = 20
+    local numColumns = math.ceil( (#kSquadType + 1) / 2)  -- for 2 rows
+    local columnWidth = (1920 - margin.left - margin.right - (numColumns-1) * gap) / numColumns -- margin + col + gap + ... + col + gap + col + margin = 1920
+    local fullHeight =   1080 - margin.top - margin.bottom
+    local halfHeight =  (1080 - margin.top - margin.bottom - gap) / 2
+    -- Log("colWidth:%s, halfHeight:%s, fullHeight:%s", columnWidth, halfHeight, fullHeight)
 
-    self.feedbackicon = GUIManager:CreateGraphicItem()
-    self.feedbackicon:SetSize(GUIScale(Vector(150, 129, 0)))
-    self.feedbackicon:SetPosition(GUIScale(Vector(-40, -30, 0)))
-    self.feedbackicon:SetTexture(self.kFeedbackIconTexture)
-    self.background:AddChild(self.feedbackicon)
+    local contentMargin = {top = 22, bottom = 22, left = 22, right = 22}
 
-    self.content = GUIManager:CreateGraphicItem()
-    self.content:SetSize(GUIScale(Vector(662, 300, 0)))
-    self.content:SetPosition(GUIScale(Vector(50,50, 0)))
-    self.content:SetColor(Color(1,1,1,0))
-    self.background:AddChild(self.content)
+    self.SquadRegions = {}
+    for i = 1, #kSquadType do
+        local row = ConditionalValue(i <= (#kSquadType+1) / 2, 0, 1)
+        local col = ConditionalValue(row == 0, i-1, i-1-((#kSquadType-1) / 2))
+        local xOffset = margin.left + col * (columnWidth + gap)
+        local yOffset = margin.top + row * (halfHeight + gap)
+        self.SquadRegions[i] = {}
+        self.SquadRegions[i].background = GUIManager:CreateGraphicItem()
+        self.SquadRegions[i].background:SetLayer( kGUILayerMainMenuDialogs )
+        self.SquadRegions[i].background:SetAnchor( GUIItem.Left, GUIItem.Top )
+        self.SquadRegions[i].background:SetPosition( ScaledCoords(xOffset, yOffset) )
+        self.SquadRegions[i].background:SetSize( ScaledCoords( columnWidth, ConditionalValue(i==1, fullHeight, halfHeight)) )
+        self.SquadRegions[i].background:SetColor( transparentColor( kSquadMenuBackgroundColors[0], 0.5))
 
-    self.question = GetGUIManager():CreateTextItem()
-    self.question:SetFontName(GUISquadSelect.kFont)
-    self.question:SetScale(GetScaledVector())
-    GUIMakeFontScale(self.question)
-    self.question:SetFontIsBold(true)
-    self.question:SetPosition(GUIScale(Vector(0,30,0)))
-    self.question:SetAnchor(GUIItem.Middle, GUIItem.Top)
-    self.question:SetTextAlignmentX(GUIItem.Align_Center)
-    self.question:SetTextAlignmentY(GUIItem.Align_Center)
-    self.question:SetColor(GUISquadSelect.kTextColor)
-    self.content:AddChild(self.question)
+
+        self.SquadRegions[i].frame = GUIManager:CreateGraphicItem()
+        self.SquadRegions[i].frame:SetLayer( kGUILayerMainMenuDialogs )
+        self.SquadRegions[i].frame:SetAnchor( GUIItem.Left, GUIItem.Top)
+        self.SquadRegions[i].frame:SetPosition( ScaledCoords(0, 0))
+        self.SquadRegions[i].frame:SetSize( ScaledCoords(columnWidth, ConditionalValue(i==1, fullHeight, halfHeight)) )
+        -- self.SquadRegions[i].frame:SetColor( transparentColor( kSquadMenuBackgroundColors[i], 0.5))
+        -- self.SquadRegions[i].frame:SetTexture(self.kBackgroundTexture)
+        self.SquadRegions[i].frame:SetTexture( ConditionalValue(i==1, GUISquadSelect.kLongFrameTexture, GUISquadSelect.kFrameTexture) )
+        self.SquadRegions[i].background:AddChild( self.SquadRegions[i].frame )
+
+
+        self.SquadRegions[i].content = GUIManager:CreateGraphicItem()
+        self.SquadRegions[i].content:SetLayer( kGUILayerMainMenuDialogs )
+        self.SquadRegions[i].content:SetAnchor( GUIItem.Left, GUIItem.Top)
+        self.SquadRegions[i].content:SetPosition( ScaledCoords(contentMargin.top, contentMargin.left))
+        self.SquadRegions[i].content:SetSize( ScaledCoords(columnWidth - contentMargin.left - contentMargin.right, ConditionalValue(i==1, fullHeight - contentMargin.top - contentMargin.bottom, halfHeight - contentMargin.top - contentMargin.bottom)) )
+        if GUISquadSelect.kSquadBackgrounds[i] then
+            self.SquadRegions[i].content:SetColor(Color(1,1,1,1))
+            self.SquadRegions[i].content:SetTexture( self.kSquadBackgrounds[i] )
+        else
+            self.SquadRegions[i].content:SetColor(Color(1,1,1,0))
+        end
+        self.SquadRegions[i].content:SetInheritsParentAlpha( false )
+        self.SquadRegions[i].background:AddChild( self.SquadRegions[i].content )
+
+
+        self.SquadRegions[i].name = GetGUIManager():CreateTextItem()
+        self.SquadRegions[i].name:SetLayer( kGUILayerMainMenuDialogs )
+        self.SquadRegions[i].name:SetFontName( GUISquadSelect.kSquadNameFont )
+        self.SquadRegions[i].name:SetScale( GetScaledVector() )
+        GUIMakeFontScale(self.SquadRegions[i].name)
+        self.SquadRegions[i].name:SetFontIsBold( true )
+        self.SquadRegions[i].name:SetPosition( GUIScale(Vector(4,30,0)) )
+        self.SquadRegions[i].name:SetAnchor( GUIItem.Left, GUIItem.Top )
+        self.SquadRegions[i].name:SetTextAlignmentX( GUIItem.Align_Min )
+        self.SquadRegions[i].name:SetTextAlignmentY( GUIItem.Align_Center )
+        self.SquadRegions[i].name:SetColor( kSquadMenuBackgroundColors[i] )
+        self.SquadRegions[i].name:SetText( kSquadNames[i] )
+        self.SquadRegions[i].name:SetInheritsParentAlpha( false )
+        self.SquadRegions[i].content:AddChild( self.SquadRegions[i].name )
+
+
+        self.SquadRegions[i].players = {}
+        for j = 1, ConditionalValue(i == 1, 24, kMaxSquadsMembersPerSquad) do
+            self.SquadRegions[i].players[j] = GetGUIManager():CreateTextItem()
+            self.SquadRegions[i].players[j]:SetLayer( kGUILayerMainMenuDialogs )
+            self.SquadRegions[i].players[j]:SetFontName( GUISquadSelect.kSquadPlayerFont )
+            self.SquadRegions[i].players[j]:SetScale( GetScaledVector() )
+            GUIMakeFontScale(self.SquadRegions[i].players[j])
+            self.SquadRegions[i].players[j]:SetFontIsBold( true )
+            self.SquadRegions[i].players[j]:SetPosition( GUIScale(Vector(4,30+j*18,0)) )
+            self.SquadRegions[i].players[j]:SetAnchor( GUIItem.Left, GUIItem.Top )
+            self.SquadRegions[i].players[j]:SetTextAlignmentX( GUIItem.Align_Min )
+            self.SquadRegions[i].players[j]:SetTextAlignmentY( GUIItem.Align_Min )
+            self.SquadRegions[i].players[j]:SetColor( kSquadMenuPlayerColors[i] )
+            self.SquadRegions[i].players[j]:SetInheritsParentAlpha( false )
+            self.SquadRegions[i].content:AddChild( self.SquadRegions[i].players[j] )
+        end
+
+        -- Log("x:%s y:%s, colWidth:%s, halfHeight:%s, fullHeight:%s", xOffset, yOffset, columnWidth, halfHeight, fullHeight)
+        -- Log("ScreenPosition: %s", self.SquadRegions[i]:GetScreenPosition(Client.GetScreenWidth(), Client.GetScreenHeight()))
+        -- Log("ScaledSize: %s",self.SquadRegions[i]:GetScaledSize())
+    end
 
 end
 
 
 function GUISquadSelect:_UninitializeBackground()
-    GUI.DestroyItem(self.background)
-    self.background = nil
-    self.content = nil
+    for i = 1, #kSquadType do
+        GUI.DestroyItem(self.SquadRegions[i].background)
+        GUI.DestroyItem(self.SquadRegions[i].frame)
+        GUI.DestroyItem(self.SquadRegions[i].content)
+        GUI.DestroyItem(self.SquadRegions[i].name)
+        for j = 1, ConditionalValue(i == 1, 24, kMaxSquadsMembersPerSquad) do
+            GUI.DestroyItem(self.SquadRegions[i].players[j])
+        end
+    end
 end
