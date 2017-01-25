@@ -8,13 +8,18 @@ GUISquadSelect.kSquadActiveBackgrounds = {}
 GUISquadSelect.kSquadInactiveBackgrounds = {}
 for i, texture in pairs(kSquadMenuBackgroundTextures) do
     if texture and type(texture[1]) == "string" and not GUISquadSelect.kSquadActiveBackgrounds[i] then
-        Log("precaching %s", texture[1])
         GUISquadSelect.kSquadActiveBackgrounds[i] = PrecacheAssetSafe(texture[1])
     end
     if texture and type(texture[2]) == "string" and not GUISquadSelect.kSquadInactiveBackgrounds[i] then
-        Log("precaching %s", texture[2])
         GUISquadSelect.kSquadInactiveBackgrounds[i] = PrecacheAssetSafe(texture[2])
     end
+end
+GUISquadSelect.kSounds = {
+    hovar = "sound/NS2.fev/common/hovar",
+    click = "sound/NS2.fev/common/button_click"
+}
+for _, soundAsset in pairs(GUIFeedbackState_Reason.kSounds) do
+    Client.PrecacheLocalSound(soundAsset)
 end
 
 
@@ -37,7 +42,9 @@ end
 
 function GUISquadSelect:SetIsVisible(visible)
     self.isVisible = visible
-    --self.background:SetIsVisible(visible)
+    for i = 1, #kSquadType do
+        self.SquadRegions[i].background:SetIsVisible(visible) -- children inherit setting
+    end
     MouseTracker_SetIsVisible(visible)
     SetKeyEventBlocker(visible and self or nil)
 end
@@ -48,13 +55,34 @@ function GUISquadSelect:Close()
 end
 
 
+function GUISquadSelect:OnClick()
+    for squad = 1 , #self.SquadRegions do
+        local region = self.SquadRegions[squad]
+        local mouseOver = GUIItemContainsPoint(region.background, Client.GetCursorPosScreen())
+        if (mouseOver) then
+            StartSoundEffect(GUISquadSelect.kSounds.click)
+            local player = Client.GetLocalPlayer()
+            if HasMixin(player, "SquadMember") then
+                local currentSquadNumber = player:GetSquadNumber()
+                if currentSquadNumber ~= squad then
+                    Client.SendNetworkMessage("SelectSquad", {squadNumber = squad}, true)
+                end
+            end
+            self:Close()
+            return true
+        end
+    end
+    return false
+end
+
+
 function GUISquadSelect:SendKeyEvent(key, down)
     local inputHandled = false
     if self.isVisible then
         if key == InputKey.MouseButton0 and self.mousePressed ~= down then
             self.mousePressed = down
             if down then
-                -- inputHandled = self:OnClick()
+                inputHandled = self:OnClick()
             end
         end
 
@@ -84,14 +112,8 @@ end
 
 
 function GUISquadSelect:Uninitialize()
-
     if self:GetIsVisible() then
         self:SetIsVisible(false)
-    end
-
-    if self.close then
-        GUI.DestroyItem(self.close)
-        self.close = nil
     end
 
     self:_UninitializeBackground()
@@ -106,26 +128,38 @@ end
 function GUISquadSelect:Update(deltaTime)
     PROFILE("GUISquadSelect:Update")
 
+    local player = Client.GetLocalPlayer()
+    local teamNumber = player:GetTeamNumber()
+    -- local gameInfo = GetGameInfoEntity()
+
     if self.isVisible then
-        local player = Client.GetLocalPlayer()
-        local teamNumber = player:GetTeamNumber()
         local players = GetScoreData({ teamNumber })
-        -- local gameInfo = GetGameInfoEntity()
 
         for squad = 1 , #self.SquadRegions do
 
             local region = self.SquadRegions[squad]
             local mouseOver = GUIItemContainsPoint(region.background, Client.GetCursorPosScreen())
             if (mouseOver) then
-                region.background:SetTexture( self.kSquadActiveBackgrounds[squad] )
+                if mouseOver ~= region.mouseOverState then
+                    StartSoundEffect(GUISquadSelect.kSounds.hovar)
+                    region.background:SetTexture( self.kSquadActiveBackgrounds[squad] )
+                end
+
                 for p = 1, GetSquadMaxPlayerSlots(squad) do
                     region.players[p]:SetColor( kSquadMenuPlayerColors[squad] )
                 end
+
+                region.mouseOverState = true
             else
-                region.background:SetTexture( self.kSquadInactiveBackgrounds[squad] )
+                if mouseOver ~= region.mouseOverState then
+                    region.background:SetTexture( self.kSquadInactiveBackgrounds[squad] )
+                end
+
                 for p = 1, GetSquadMaxPlayerSlots(squad) do
                     region.players[p]:SetColor( kSquadMenuPlayerColors[0] )
                 end
+
+                region.mouseOverState = false
             end
 
             -- add all playerslots in reverse order
@@ -147,7 +181,7 @@ function GUISquadSelect:Update(deltaTime)
 
             -- remove unused players from list
             for i = 1, #unusedPlayerSlots do
-                unusedPlayerSlots[i]:SetText('Dummy')
+                unusedPlayerSlots[i]:SetText('')
             end
         end
 
@@ -159,7 +193,6 @@ end
 
 
 function GUISquadSelect:_InitializeBackground()
-    Log("_InitializeBackground")
 
     local margin = {top = 42, bottom = 42, left = 42, right = 42}
     local gap = 20
@@ -178,7 +211,10 @@ function GUISquadSelect:_InitializeBackground()
         local col = ConditionalValue(row == 0, i-1, i-1-((#kSquadType-1) / 2))
         local xOffset = margin.left + col * (columnWidth + gap)
         local yOffset = margin.top + row * (halfHeight + gap)
+
         self.SquadRegions[i] = {}
+        self.SquadRegions[i].mouseOverState = false
+
         self.SquadRegions[i].background = GUIManager:CreateGraphicItem()
         self.SquadRegions[i].background:SetLayer( kGUILayerMainMenuDialogs )
         self.SquadRegions[i].background:SetAnchor( GUIItem.Left, GUIItem.Top )
@@ -236,13 +272,12 @@ end
 
 
 function GUISquadSelect:_UninitializeBackground()
-    Log("_UninitializeBackground")
     for i = 1, #kSquadType do
-        GUI.DestroyItem(self.SquadRegions[i].background)
-        GUI.DestroyItem(self.SquadRegions[i].content)
-        GUI.DestroyItem(self.SquadRegions[i].name)
         for j = 1, GetSquadMaxPlayerSlots(i) do
             GUI.DestroyItem(self.SquadRegions[i].players[j])
         end
+        GUI.DestroyItem(self.SquadRegions[i].name)
+        GUI.DestroyItem(self.SquadRegions[i].content)
+        GUI.DestroyItem(self.SquadRegions[i].background)
     end
 end
