@@ -37,7 +37,7 @@ end
 
 
 function SquadTeamMixin:RemovePlayerFromSquadTeam(player)
-    if player and HasMixin(player, "SquadMember") then
+    if HasMixin(player, "SquadMember") then
         local squadNumber = player:GetSquadNumber()
         self:RemovePlayerFromSquad(player, squadNumber)
     end
