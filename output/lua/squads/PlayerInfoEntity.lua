@@ -2,8 +2,8 @@ Script.Load("lua/Globals.lua")
 
 local playerInfoNetworkVars =
 {
-    squadNumber = string.format("integer (0 to %d)", #kSquadType)
-    -- squadNumber = "enum kSquadType"
+    -- squadNumber = string.format("integer (0 to %d)", #kSquadType)
+    squadNumber = "enum kSquadType"
 }
 
 local oldPlayerInfoEntity_UpdateScore = PlayerInfoEntity.UpdateScore
