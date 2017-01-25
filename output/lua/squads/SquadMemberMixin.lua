@@ -16,6 +16,7 @@ function SquadMemberMixin:__initmixin()
 end
 
 
+-- NOTE does not notify squad, use SwitchToSquad()
 function SquadMemberMixin:SetSquadNumber(squadNumber)
     self.squadNumber = squadNumber
 end
