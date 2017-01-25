@@ -18,7 +18,7 @@ function PlayerInfoEntity:UpdateScore()
             if HasMixin(scorePlayer, "SquadMember") then
                 self.squadNumber = scorePlayer:GetSquadNumber()
             end
-            Log("PlayerInfoEntity %s", self.squadNumber)
+            --Log("PlayerInfoEntity %s", self.squadNumber)
         end
 
     end

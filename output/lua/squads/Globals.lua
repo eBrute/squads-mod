@@ -1,4 +1,4 @@
-kMaxSquadsMembersPerSquad = 6
+kMaxSquadsMembersPerSquad = 8
 
 kSquadType = enum {
 	[0] = "Invalid",
@@ -6,7 +6,7 @@ kSquadType = enum {
 	"Red",
 	"Green",
 	"Blue",
-	"Gold",
+	"Yellow",
 	"Purple",
 	"Pink",
 }
@@ -17,41 +17,41 @@ kSquadNames = {
 	"Red Squad",
 	"Green Squad",
 	"Blue Squad",
-	"Gold Squad",
+	"Yellow Squad",
 	"Purple Squad",
 	"Pink Squad",
 }
 
 kSquadMenuBackgroundTextures = {
 	[0] = nil, -- invalid
-	"ui/squads/bg_largeempty.dds", -- unassigned
-	"ui/squads/bg_cartman.dds", -- red
-	"ui/squads/bg_gir.dds", -- green
-	"ui/squads/bg_bender.dds", -- blue
-	"ui/squads/bg_homer.dds", -- gold
-	"ui/squads/bg_tentacle.dds", -- purple
-	"ui/squads/bg_kitty.dds", -- pink
+	{"ui/squads/bg_large.dds",     "ui/squads/bg_large_black.dds"}, -- unassigned
+	{"ui/squads/bg_zoidberg.dds",  "ui/squads/bg_black.dds"}, -- red
+	{"ui/squads/bg_gir2.dds",      "ui/squads/bg_black.dds"}, -- green
+	{"ui/squads/bg_sonic.dds",     "ui/squads/bg_black.dds"}, -- blue
+	{"ui/squads/bg_spongebob.dds", "ui/squads/bg_black.dds"}, -- yellow
+	{"ui/squads/bg_tentacle.dds",  "ui/squads/bg_black.dds"}, -- purple
+	{"ui/squads/bg_pinky.dds",     "ui/squads/bg_black.dds"}, -- pink
 }
 
 
-kSquadMenuBackgroundColors = {
+kSquadMenuTitleColors = {
 	[0] = Color(0.25, 0.25, 0.25, 1), -- invalid
 	Color(0.55, 0.55, 0.55, 1), -- unassigned
-	Color(0.97, 0.14, 0.14, 1), -- red
-	Color(0.12, 0.55, 0.12, 1), -- green
-	Color(0.12, 0.18, 1.00, 1), -- blue
-	Color(0.90, 0.84, 0.20, 1), -- gold
-	Color(0.55, 0.12, 1.00, 1), -- purple
-	Color(1.00, 0.12, 0.55, 1), -- pink
+	Color(0.95, 0.34, 0.37, 1), -- red
+	Color(0.58, 0.75, 0.25, 1), -- green
+	Color(0.22, 0.40, 0.69, 1), -- blue
+	Color(0.99, 0.84, 0.05, 1), -- yellow
+	Color(0.39, 0.29, 0.62, 1), -- purple
+	Color(0.97, 0.72, 0.82, 1), -- pink
 }
 
 kSquadMenuPlayerColors = {
-	[0] = Color(0.80, 0.80, 0.80, 1), -- invalid
-	Color(0.80, 0.80, 0.80, 1), -- unassigned
-	Color(0.80, 0.80, 0.80, 1), -- red
-	Color(0.80, 0.80, 0.80, 1), -- green
-	Color(0.80, 0.80, 0.80, 1), -- blue
-	Color(0.80, 0.80, 0.80, 1), -- gold
-	Color(0.80, 0.80, 0.80, 1), -- purple
-	Color(0.80, 0.80, 0.80, 1), -- pink
+	[0] = Color(0.80, 0.80, 0.80, 1), -- for unhovered state
+	Color(0.137255, 0.149020, 0.160784, 1), -- unassigned
+	Color(0.137255, 0.149020, 0.160784, 1), -- red
+	Color(0.137255, 0.149020, 0.160784, 1), -- green
+	Color(0.137255, 0.149020, 0.160784, 1), -- blue
+	Color(0.137255, 0.149020, 0.160784, 1), -- yellow
+	Color(0.137255, 0.149020, 0.160784, 1), -- purple
+	Color(0.137255, 0.149020, 0.160784, 1), -- pink
 }
