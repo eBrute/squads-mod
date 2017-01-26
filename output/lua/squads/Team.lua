@@ -24,13 +24,23 @@ function Team:RemovePlayer(player)
 end
 
 
+local gIsPlayerPreservingReset = false
 local oldTeamReset = Team.Reset
 
 function Team:Reset()
-	if HasMixin(self, "SquadTeam") then
+	if not gIsPlayerPreservingReset and HasMixin(self, "SquadTeam") then
 		self:ResetSquads()
 	end
 	return oldTeamReset(self)
+end
+
+
+local oldResetPreservePlayers = Team.ResetPreservePlayers
+
+function Team:ResetPreservePlayers(techPoint)
+	gIsPlayerPreservingReset = true
+	oldResetPreservePlayers(self, techPoint)
+	gIsPlayerPreservingReset = false
 end
 
 
