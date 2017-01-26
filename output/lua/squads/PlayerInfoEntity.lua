@@ -14,7 +14,7 @@ function PlayerInfoEntity:UpdateScore()
 
         if scorePlayer then
 
-            self.squadNumber = 0
+            self.squadNumber = kSquadType.Invalid
             if HasMixin(scorePlayer, "SquadMember") then
                 self.squadNumber = scorePlayer:GetSquadNumber()
             end
