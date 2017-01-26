@@ -3,12 +3,12 @@ kMaxSquadsMembersPerSquad = 8
 kSquadType = enum {
 	[0] = "Invalid",
 	"Unassigned",
-	"Red",
-	"Green",
-	"Blue",
-	"Yellow",
-	"Purple",
-	"Pink",
+	"Squad1",
+	"Squad2",
+	"Squad3",
+	"Squad4",
+	"Squad5",
+	"Squad6",
 }
 
 kSquadNames = {
@@ -34,7 +34,7 @@ kSquadMenuBackgroundTextures = {
 }
 
 
-kSquadMenuTitleColors = {
+kSquadColors = { -- used for menu squad title and scoreboard
 	[0] = Color(0.25, 0.25, 0.25, 1), -- invalid
 	Color(0.55, 0.55, 0.55, 1), -- unassigned
 	Color(0.95, 0.34, 0.37, 1), -- red

@@ -121,7 +121,7 @@ end
 
 
 function GetSquadMaxPlayerSlots(squad)
-    return  ConditionalValue(squad == 1, 30, kMaxSquadsMembersPerSquad)
+    return  ConditionalValue(squad == kSquadType.Unassigned, 30, kMaxSquadsMembersPerSquad)
 end
 
 
@@ -219,7 +219,7 @@ function GUISquadSelect:_InitializeBackground()
         self.SquadRegions[i].background:SetLayer( kGUILayerMainMenuDialogs )
         self.SquadRegions[i].background:SetAnchor( GUIItem.Left, GUIItem.Top )
         self.SquadRegions[i].background:SetPosition( ScaledCoords(xOffset, yOffset) )
-        self.SquadRegions[i].background:SetSize( ScaledCoords( columnWidth, ConditionalValue(i==1, fullHeight, halfHeight)) )
+        self.SquadRegions[i].background:SetSize( ScaledCoords( columnWidth, ConditionalValue(i==kSquadType.Unassigned, fullHeight, halfHeight)) )
         self.SquadRegions[i].background:SetTexture( self.kSquadInactiveBackgrounds[i] )
 
         self.SquadRegions[i].name = GetGUIManager():CreateTextItem()
@@ -232,7 +232,7 @@ function GUISquadSelect:_InitializeBackground()
         self.SquadRegions[i].name:SetAnchor( GUIItem.Left, GUIItem.Top )
         self.SquadRegions[i].name:SetTextAlignmentX( GUIItem.Align_Min )
         self.SquadRegions[i].name:SetTextAlignmentY( GUIItem.Align_Center )
-        self.SquadRegions[i].name:SetColor( kSquadMenuTitleColors[i] )
+        self.SquadRegions[i].name:SetColor( kSquadColors[i] )
         self.SquadRegions[i].name:SetText( kSquadNames[i] )
         self.SquadRegions[i].name:SetInheritsParentAlpha( false )
         self.SquadRegions[i].background:AddChild( self.SquadRegions[i].name )
@@ -241,7 +241,7 @@ function GUISquadSelect:_InitializeBackground()
         self.SquadRegions[i].content:SetLayer( kGUILayerMainMenuDialogs )
         self.SquadRegions[i].content:SetAnchor( GUIItem.Left, GUIItem.Top)
         self.SquadRegions[i].content:SetPosition( ScaledCoords(contentMargin.left, contentMargin.top))
-        self.SquadRegions[i].content:SetSize( ScaledCoords(columnWidth - contentMargin.left - contentMargin.right, ConditionalValue(i==1, fullHeight, halfHeight) - contentMargin.top - contentMargin.bottom) )
+        self.SquadRegions[i].content:SetSize( ScaledCoords(columnWidth - contentMargin.left - contentMargin.right, ConditionalValue(i==kSquadType.Unassigned, fullHeight, halfHeight) - contentMargin.top - contentMargin.bottom) )
         self.SquadRegions[i].content:SetColor(Color(1,1,1,0))
         self.SquadRegions[i].content:SetInheritsParentAlpha( false )
         self.SquadRegions[i].background:AddChild( self.SquadRegions[i].content )
