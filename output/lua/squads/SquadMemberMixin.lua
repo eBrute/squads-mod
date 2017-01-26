@@ -47,33 +47,27 @@ if Server then
 function SquadMemberMixin:CopyPlayerDataFrom(oldPlayer)
   Log("----")
   if not oldPlayer then
-    Log("> oldplayer is nil!!!!!!!!!!!!!!!!!!!!!")
+    Log("> oldplayer is nil!!!")
     return
   end
-  Log("> CopyPlayerDataFrom, old team: %s, new team: %s", oldPlayer:GetTeamNumber(), self:GetTeamNumber() )
+
   local oldSquad = oldPlayer:GetSquad() -- this is the squad we were in
   if oldSquad then
-    Log("> remove old entity from old squad")
     oldSquad:RemovePlayer(oldPlayer) -- oldPlayer is about to be destroyed, so remove him
-  else
-    Log("> no old squad!")
   end
 
   if oldPlayer:GetTeamNumber() == self:GetTeamNumber() then
-    Log("> old and new Entity are on the same team")
     -- change occured in the same team (i.e. marine -> exo), so carry over the squad to the new entity
     local newSquad = self:GetSquad() -- new player already has the default squad because NS2Gamerules:OnEntityCreate joined the team
     if newSquad then
-      Log("> remove new entity from new squad")
       newSquad:RemovePlayer(self)  -- remove the new player from the default squad
     else
       Log("> Entity Change within team but no newsquad!!!")
     end
     if oldSquad then
-      Log("> add new entity to old squad")
       oldSquad:AddPlayer(self)
     else
-      Log("> Entity Change within team but no oldsquad!!!!!!!!!!") -- TODO why?
+      Log("> Entity Change within team but no oldsquad!!!")
     end
   end
 end
