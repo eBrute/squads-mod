@@ -42,18 +42,6 @@ local function GetIsPlayingTeam(teamNumber)
     return teamNumber == kTeam1Index or teamNumber == kTeam2Index
 end
 
-local function ShowSquadSelectOnTeamChange(message)
-    if gSquadSelect then
-        DestroySquadSelectMenu()
-    end
-    if GetIsPlayingTeam(message.teamNumber) then
-        gSquadSelect = GetGUIManager():CreateGUIScriptSingle("squads/GUISquadSelect")
-        gSquadSelect:SetIsVisible(true)
-    end
-end
-
-Client.HookNetworkMessage("SetClientTeamNumber", ShowSquadSelectOnTeamChange)
-
 
 local function SelectSquad(squadNumber)
     Client.SendNetworkMessage("SelectSquad", {squadNumber = squadNumber}, true)

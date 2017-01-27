@@ -8,13 +8,23 @@ SquadMemberMixin = CreateMixin(SquadMemberMixin)
 SquadMemberMixin.type = "SquadMember"
 
 SquadMemberMixin.networkVars = {
-  squadNumber = "enum kSquadType"
+    -- squadNumber = string.format("integer (0 to %d)", #kSquadType)
+    squadNumber = "enum kSquadType"
 }
 
 function SquadMemberMixin:__initmixin()
-    self.squadNumber = kSquadType.Invalid
+    if Server then
+        self.squadNumber = kSquadType.Invalid
+    end
+    if Client then
+        self:AddFieldWatcher("squadNumber", SquadMemberMixin.OnSquadNumber)
+    end
 end
 
+
+function SquadMemberMixin:OnSquadNumber()
+    Log("SquadNumber changed")
+end
 
 -- NOTE does not notify squad, use SwitchToSquad()
 function SquadMemberMixin:SetSquadNumber(squadNumber)
@@ -28,7 +38,7 @@ end
 
 
 function SquadMemberMixin:GetSquad()
-	local team = self:GetTeam()
+    local team = self:GetTeam()
     if HasMixin(team, "SquadTeam") then
         return team:GetSquad(self.squadNumber)
     end
@@ -43,32 +53,41 @@ function SquadMemberMixin:SwitchToSquad(squadNumber)
     end
 end
 
+
 if Server then
-function SquadMemberMixin:CopyPlayerDataFrom(oldPlayer)
-  Log("----")
-  if not oldPlayer then
-    Log("> oldplayer is nil!!!")
-    return
-  end
-
-  local oldSquad = oldPlayer:GetSquad() -- this is the squad we were in
-  if oldSquad then
-    oldSquad:RemovePlayer(oldPlayer) -- oldPlayer is about to be destroyed, so remove him
-  end
-
-  if oldPlayer:GetTeamNumber() == self:GetTeamNumber() then
-    -- change occured in the same team (i.e. marine -> exo), so carry over the squad to the new entity
-    local newSquad = self:GetSquad() -- new player already has the default squad because NS2Gamerules:OnEntityCreate joined the team
-    if newSquad then
-      newSquad:RemovePlayer(self)  -- remove the new player from the default squad
-    else
-      Log("> Entity Change within team but no newsquad!!!")
+    function SquadMemberMixin:OnJoinTeam()
+        local team = self:GetTeam()
+        if HasMixin(team, "SquadTeam") then
+            Server.SendNetworkMessage(self:GetClient(), "ShowSquadSelect", {}, true)
+        end
     end
-    if oldSquad then
-      oldSquad:AddPlayer(self)
-    else
-      Log("> Entity Change within team but no oldsquad!!!")
+
+
+    function SquadMemberMixin:CopyPlayerDataFrom(oldPlayer)
+      Log("----")
+      if not oldPlayer then
+        Log("> oldplayer is nil!!!")
+        return
+      end
+
+      local oldSquad = oldPlayer:GetSquad() -- this is the squad we were in
+      if oldSquad then
+        oldSquad:RemovePlayer(oldPlayer) -- oldPlayer is about to be destroyed, so remove him
+      end
+
+      if oldPlayer:GetTeamNumber() == self:GetTeamNumber() then
+        -- change occured in the same team (i.e. marine -> exo), so carry over the squad to the new entity
+        local newSquad = self:GetSquad() -- new player already has the default squad because NS2Gamerules:OnEntityCreate joined the team
+        if newSquad then
+          newSquad:RemovePlayer(self)  -- remove the new player from the default squad
+        else
+          Log("> Entity Change within team but no newsquad!!!")
+        end
+        if oldSquad then
+          oldSquad:AddPlayer(self)
+        else
+          Log("> Entity Change within team but no oldsquad!!!")
+        end
+      end
     end
-  end
-end
 end
