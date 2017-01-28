@@ -192,7 +192,7 @@ function GUISquadSelect:Update(deltaTime)
 
             -- remove unused players from list
             for i = 1, #unusedPlayerSlots do
-                unusedPlayerSlots[i].playerName:SetText('DummyDummyDummyDummyDummyDummyDummyDummyDummyDummyDummyDummy') -- Dummy
+                unusedPlayerSlots[i].playerName:SetText('')
                 unusedPlayerSlots[i].playerIcon:SetIsVisible(false)
             end
         end
