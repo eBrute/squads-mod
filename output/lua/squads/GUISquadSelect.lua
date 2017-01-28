@@ -79,20 +79,15 @@ end
 function GUISquadSelect:SendKeyEvent(key, down)
     local inputHandled = false
     if self.isVisible then
-        if key == InputKey.MouseButton0 and self.mousePressed ~= down then
-            self.mousePressed = down
+        if key == InputKey.MouseButton0 then
             if down then
-                inputHandled = self:OnClick()
+                self:OnClick()
             end
+            inputHandled = true -- No matter what, this menu consumes MouseButton0 clicks.
         end
 
         if key == InputKey.Escape and down then
             self:Close()
-            inputHandled = true
-        end
-
-        -- No matter what, this menu consumes MouseButton0 clicks.
-        if key == InputKey.MouseButton0 and down then
             inputHandled = true
         end
     end
