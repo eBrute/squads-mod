@@ -4,6 +4,8 @@ class 'GUISquadSelect' (GUIScript)
 
 GUISquadSelect.kSquadNameFont = Fonts.kAgencyFB_Large_Bold
 GUISquadSelect.kSquadPlayerFont = Fonts.kKartika_Medium
+GUISquadSelect.kSquadArrow = PrecacheAssetSafe("ui/squads/arrow.dds")
+GUISquadSelect.kSquadFriends = PrecacheAssetSafe("ui/squads/friends.dds")
 GUISquadSelect.kSquadActiveBackgrounds = {}
 GUISquadSelect.kSquadInactiveBackgrounds = {}
 for i, texture in pairs(kSquadMenuBackgroundTextures) do
@@ -43,9 +45,7 @@ end
 
 function GUISquadSelect:SetIsVisible(visible)
     self.isVisible = visible
-    for i = 1, #kSquadType do
-        self.SquadRegions[i].background:SetIsVisible(visible) -- children inherit setting
-    end
+    self.screen:SetIsVisible(visible) -- children inherit setting
     MouseTracker_SetIsVisible(visible)
     SetKeyEventBlocker(visible and self or nil)
 end
@@ -142,7 +142,7 @@ function GUISquadSelect:Update(deltaTime)
                 end
 
                 for p = 1, GetSquadMaxPlayerSlots(squad) do
-                    region.players[p]:SetColor( kSquadMenuPlayerColors[squad] )
+                    region.playerSlots[p].playerName:SetColor( kSquadMenuPlayerColors[squad] )
                 end
 
                 region.mouseOverState = true
@@ -152,7 +152,7 @@ function GUISquadSelect:Update(deltaTime)
                 end
 
                 for p = 1, GetSquadMaxPlayerSlots(squad) do
-                    region.players[p]:SetColor( kSquadMenuPlayerColors[0] )
+                    region.playerSlots[p].playerName:SetColor( kSquadMenuPlayerColors[0] )
                 end
 
                 region.mouseOverState = false
@@ -160,27 +160,44 @@ function GUISquadSelect:Update(deltaTime)
 
             -- add all playerslots in reverse order
             local unusedPlayerSlots = {}
-            for i = #region.players, 1, -1 do
-                table.insert(unusedPlayerSlots, region.players[i])
+            for i = #region.playerSlots, 1, -1 do
+                table.insert(unusedPlayerSlots, region.playerSlots[i])
             end
 
             -- add all players of this squad
             for p = 1, #players do
-                -- Log("name %s, team %s, squad %s", players[p].Name, players[p].EntityTeamNumber, players[p].SquadNumber )
                 if players[p].EntityTeamNumber == teamNumber and players[p].SquadNumber == squad and #unusedPlayerSlots > 0 then
-                    unusedPlayerSlots[#unusedPlayerSlots]:SetText(players[p].Name)
-                    -- IsCommander
-                    -- IsSteamFriend
-                    table.remove(unusedPlayerSlots)
+
+                    local playerSlot = unusedPlayerSlots[#unusedPlayerSlots]
+                    local slotUsed = true
+
+                    if players[p].SteamId == Client.GetSteamId() then
+                        playerSlot.playerIcon:SetIsVisible(true)
+                        playerSlot.playerIcon:SetTexture(GUISquadSelect.kSquadArrow)
+                    elseif players[p].IsCommander then
+                        slotUsed = false
+                    elseif players[p].IsSteamFriend then
+                        playerSlot.playerIcon:SetIsVisible(true)
+                        playerSlot.playerIcon:SetTexture(GUISquadSelect.kSquadFriends)
+                    else
+                        playerSlot.playerIcon:SetIsVisible(false)
+                    end
+
+                    if slotUsed then
+                        playerSlot.playerName:SetText(players[p].Name)
+                        table.remove(unusedPlayerSlots)
+                    end
                 end
             end
 
             -- remove unused players from list
             for i = 1, #unusedPlayerSlots do
-                unusedPlayerSlots[i]:SetText('')
+                unusedPlayerSlots[i].playerName:SetText('DummyDummyDummyDummyDummyDummyDummyDummyDummyDummyDummyDummy') -- Dummy
+                unusedPlayerSlots[i].playerIcon:SetIsVisible(false)
             end
         end
 
+        -- restore mouse if some other mod/gui decided to remove it
         if not MouseTracker_GetIsVisible() then
             MouseTracker_SetIsVisible(true)
         end
@@ -196,10 +213,16 @@ function GUISquadSelect:_InitializeBackground()
     local columnWidth = (1920 - margin.left - margin.right - (numColumns-1) * gap) / numColumns -- margin + col + gap + ... + col + gap + col + margin = 1920
     local fullHeight =   1080 - margin.top - margin.bottom
     local halfHeight =  (1080 - margin.top - margin.bottom - gap) / 2
-    -- Log("colWidth:%s, halfHeight:%s, fullHeight:%s", columnWidth, halfHeight, fullHeight)
 
     local squadNamePosition = {top = 40, left = 26}
-    local contentMargin = {top = 72, bottom = 26, left = 26, right = 28}
+    local contentMargin = {top = 72, bottom = 22, left = 16, right = 16}
+
+    self.screen = GUIManager:CreateGraphicItem()
+    self.screen:SetLayer( kGUILayerMainMenuDialogs )
+    self.screen:SetAnchor( GUIItem.Left, GUIItem.Top )
+    self.screen:SetPosition( ScaledCoords(0, 0) )
+    self.screen:SetSize( ScaledCoords(1920, 1080) )
+    self.screen:SetColor( Color(0,0,0,0.8) )
 
     self.SquadRegions = {}
     for i = 1, #kSquadType do
@@ -208,56 +231,85 @@ function GUISquadSelect:_InitializeBackground()
         local xOffset = margin.left + col * (columnWidth + gap)
         local yOffset = margin.top + row * (halfHeight + gap)
 
-        self.SquadRegions[i] = {}
-        self.SquadRegions[i].mouseOverState = false
+        local squadRegion = {}
+        squadRegion.mouseOverState = false
 
-        self.SquadRegions[i].background = GUIManager:CreateGraphicItem()
-        self.SquadRegions[i].background:SetLayer( kGUILayerMainMenuDialogs )
-        self.SquadRegions[i].background:SetAnchor( GUIItem.Left, GUIItem.Top )
-        self.SquadRegions[i].background:SetPosition( ScaledCoords(xOffset, yOffset) )
-        self.SquadRegions[i].background:SetSize( ScaledCoords( columnWidth, ConditionalValue(i==kSquadType.Unassigned, fullHeight, halfHeight)) )
-        self.SquadRegions[i].background:SetTexture( self.kSquadInactiveBackgrounds[i] )
+        squadRegion.background = GUIManager:CreateGraphicItem()
+        squadRegion.background:SetLayer( kGUILayerMainMenuDialogs )
+        squadRegion.background:SetAnchor( GUIItem.Left, GUIItem.Top )
+        squadRegion.background:SetPosition( ScaledCoords(xOffset, yOffset) )
+        squadRegion.background:SetSize( ScaledCoords( columnWidth, ConditionalValue(i==kSquadType.Unassigned, fullHeight, halfHeight)) )
+        squadRegion.background:SetTexture( self.kSquadInactiveBackgrounds[i] )
+        squadRegion.background:SetInheritsParentAlpha( true )
+        self.screen:AddChild( squadRegion.background )
 
-        self.SquadRegions[i].name = GetGUIManager():CreateTextItem()
-        self.SquadRegions[i].name:SetLayer( kGUILayerMainMenuDialogs )
-        self.SquadRegions[i].name:SetFontName( GUISquadSelect.kSquadNameFont )
-        self.SquadRegions[i].name:SetScale( GetScaledVector() )
-        GUIMakeFontScale(self.SquadRegions[i].name)
-        self.SquadRegions[i].name:SetFontIsBold( true )
-        self.SquadRegions[i].name:SetPosition( ScaledCoords(squadNamePosition.left,squadNamePosition.top) )
-        self.SquadRegions[i].name:SetAnchor( GUIItem.Left, GUIItem.Top )
-        self.SquadRegions[i].name:SetTextAlignmentX( GUIItem.Align_Min )
-        self.SquadRegions[i].name:SetTextAlignmentY( GUIItem.Align_Center )
-        self.SquadRegions[i].name:SetColor( kSquadColors[i] )
-        self.SquadRegions[i].name:SetText( kSquadNames[i] )
-        self.SquadRegions[i].name:SetInheritsParentAlpha( false )
-        self.SquadRegions[i].background:AddChild( self.SquadRegions[i].name )
+        squadRegion.squadName = GetGUIManager():CreateTextItem()
+        squadRegion.squadName:SetLayer( kGUILayerMainMenuDialogs )
+        squadRegion.squadName:SetFontName( GUISquadSelect.kSquadNameFont )
+        squadRegion.squadName:SetScale( GetScaledVector() )
+        GUIMakeFontScale(squadRegion.squadName)
+        squadRegion.squadName:SetFontIsBold( true )
+        squadRegion.squadName:SetPosition( ScaledCoords(squadNamePosition.left,squadNamePosition.top) )
+        squadRegion.squadName:SetAnchor( GUIItem.Left, GUIItem.Top )
+        squadRegion.squadName:SetTextAlignmentX( GUIItem.Align_Min )
+        squadRegion.squadName:SetTextAlignmentY( GUIItem.Align_Center )
+        squadRegion.squadName:SetColor( kSquadColors[i] )
+        squadRegion.squadName:SetText( kSquadNames[i] )
+        squadRegion.squadName:SetInheritsParentAlpha( false )
+        squadRegion.background:AddChild( squadRegion.squadName )
 
-        self.SquadRegions[i].content = GUIManager:CreateGraphicItem()
-        self.SquadRegions[i].content:SetLayer( kGUILayerMainMenuDialogs )
-        self.SquadRegions[i].content:SetAnchor( GUIItem.Left, GUIItem.Top)
-        self.SquadRegions[i].content:SetPosition( ScaledCoords(contentMargin.left, contentMargin.top))
-        self.SquadRegions[i].content:SetSize( ScaledCoords(columnWidth - contentMargin.left - contentMargin.right, ConditionalValue(i==kSquadType.Unassigned, fullHeight, halfHeight) - contentMargin.top - contentMargin.bottom) )
-        self.SquadRegions[i].content:SetColor(Color(1,1,1,0))
-        self.SquadRegions[i].content:SetInheritsParentAlpha( false )
-        self.SquadRegions[i].background:AddChild( self.SquadRegions[i].content )
+        squadRegion.content = GUIManager:CreateGraphicItem()
+        squadRegion.content:SetLayer( kGUILayerMainMenuDialogs )
+        squadRegion.content:SetAnchor( GUIItem.Left, GUIItem.Top)
+        squadRegion.content:SetPosition( ScaledCoords(contentMargin.left, contentMargin.top))
+        squadRegion.content:SetSize( ScaledCoords(columnWidth - contentMargin.left - contentMargin.right, ConditionalValue(i==kSquadType.Unassigned, fullHeight, halfHeight) - contentMargin.top - contentMargin.bottom) )
+        squadRegion.content:SetColor(Color(1,1,1,0))
+        squadRegion.content:SetInheritsParentAlpha( false )
+        squadRegion.background:AddChild( squadRegion.content )
 
-        self.SquadRegions[i].players = {}
+        squadRegion.playerSlots = {}
         for j = 1, GetSquadMaxPlayerSlots(i) do
-            self.SquadRegions[i].players[j] = GetGUIManager():CreateTextItem()
-            self.SquadRegions[i].players[j]:SetLayer( kGUILayerMainMenuDialogs )
-            self.SquadRegions[i].players[j]:SetFontName( GUISquadSelect.kSquadPlayerFont )
-            self.SquadRegions[i].players[j]:SetScale( GetScaledVector() )
-            GUIMakeFontScale(self.SquadRegions[i].players[j])
-            self.SquadRegions[i].players[j]:SetFontIsBold( true )
-            self.SquadRegions[i].players[j]:SetPosition( ScaledCoords(10,(j-1)*30) )
-            self.SquadRegions[i].players[j]:SetAnchor( GUIItem.Left, GUIItem.Top )
-            self.SquadRegions[i].players[j]:SetTextAlignmentX( GUIItem.Align_Min )
-            self.SquadRegions[i].players[j]:SetTextAlignmentY( GUIItem.Align_Min )
-            self.SquadRegions[i].players[j]:SetColor( kSquadMenuPlayerColors[0] )
-            self.SquadRegions[i].players[j]:SetInheritsParentAlpha( false )
-            self.SquadRegions[i].content:AddChild( self.SquadRegions[i].players[j] )
+            squadRegion.playerSlots[j] = {}
+
+            local playerSlot = {}
+
+            playerSlot.content = GetGUIManager():CreateGraphicItem()
+            playerSlot.content:SetLayer( kGUILayerMainMenuDialogs )
+            playerSlot.content:SetAnchor( GUIItem.Left, GUIItem.Top)
+            playerSlot.content:SetPosition( ScaledCoords(0, (j-1)*30))
+            playerSlot.content:SetSize( ScaledCoords(columnWidth - contentMargin.left - contentMargin.right, 28) )
+            playerSlot.content:SetColor(Color(1,1,1,0))
+            playerSlot.content:SetInheritsParentAlpha( false )
+            squadRegion.content:AddChild( playerSlot.content )
+
+            playerSlot.playerIcon = GetGUIManager():CreateGraphicItem()
+            playerSlot.playerIcon:SetLayer( kGUILayerMainMenuDialogs )
+            playerSlot.playerIcon:SetAnchor( GUIItem.Left, GUIItem.Center)
+            playerSlot.playerIcon:SetPosition( ScaledCoords(0, -14))
+            playerSlot.playerIcon:SetSize( ScaledCoords(28, 28) )
+            playerSlot.playerIcon:SetIsVisible( false )
+            playerSlot.playerIcon:SetInheritsParentAlpha( false )
+            playerSlot.content:AddChild( playerSlot.playerIcon )
+
+            playerSlot.playerName = GetGUIManager():CreateTextItem()
+            playerSlot.playerName:SetLayer( kGUILayerMainMenuDialogs )
+            playerSlot.playerName:SetFontName( GUISquadSelect.kSquadPlayerFont )
+            playerSlot.playerName:SetScale( GetScaledVector() )
+            GUIMakeFontScale(playerSlot.playerName)
+            playerSlot.playerName:SetFontIsBold( true )
+            playerSlot.playerName:SetAnchor( GUIItem.Left, GUIItem.Center )
+            playerSlot.playerName:SetPosition( ScaledCoords(32,0) )
+            playerSlot.playerName:SetTextAlignmentX( GUIItem.Align_Min )
+            playerSlot.playerName:SetTextAlignmentY( GUIItem.Align_Center )
+            playerSlot.playerName:SetTextClipped(true, playerSlot.content:GetSize().x - GUIScaleWidth(64), 40) -- these numbers kind of work, no idea why
+            playerSlot.playerName:SetColor( kSquadMenuPlayerColors[0] )
+            playerSlot.playerName:SetInheritsParentAlpha( false )
+            playerSlot.content:AddChild( playerSlot.playerName )
+
+            squadRegion.playerSlots[j] = playerSlot
         end
+
+        self.SquadRegions[i] = squadRegion
 
         -- Log("x:%s y:%s, colWidth:%s, halfHeight:%s, fullHeight:%s", xOffset, yOffset, columnWidth, halfHeight, fullHeight)
         -- Log("ScreenPosition: %s", self.SquadRegions[i]:GetScreenPosition(Client.GetScreenWidth(), Client.GetScreenHeight()))
@@ -270,10 +322,13 @@ end
 function GUISquadSelect:_UninitializeBackground()
     for i = 1, #kSquadType do
         for j = 1, GetSquadMaxPlayerSlots(i) do
-            GUI.DestroyItem(self.SquadRegions[i].players[j])
+            GUI.DestroyItem(self.SquadRegions[i].playerSlots[j].playerIcon)
+            GUI.DestroyItem(self.SquadRegions[i].playerSlots[j].playerName)
+            GUI.DestroyItem(self.SquadRegions[i].playerSlots[j].content)
         end
-        GUI.DestroyItem(self.SquadRegions[i].name)
+        GUI.DestroyItem(self.SquadRegions[i].squadName)
         GUI.DestroyItem(self.SquadRegions[i].content)
         GUI.DestroyItem(self.SquadRegions[i].background)
     end
+    GUI.DestroyItem(self.screen)
 end
