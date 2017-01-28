@@ -31,7 +31,8 @@ end
 function GUISquadSelect:Initialize()
     GUIAnimatedScript.Initialize(self)
     self:_InitializeBackground()
-    self:SetIsVisible(false)
+    self.isVisible = false
+    self.screen:SetIsVisible(false) -- children inherit setting
 end
 
 
