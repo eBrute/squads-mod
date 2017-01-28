@@ -1,27 +1,28 @@
-local function CreatequadSelectMenu()
-    local player = Client.GetLocalPlayer()
-    if player:GetIsOnPlayingTeam() then
+gSquadSelect = nil
+
+local function CreatequadSelectMenuIfNotExists()
+    if not gSquadSelect then
         gSquadSelect = GetGUIManager():CreateGUIScriptSingle("squads/GUISquadSelect")
-        gSquadSelect:SetIsVisible(true)
     end
 end
 
 local function DestroySquadSelectMenu()
-    GetGUIManager():DestroyGUIScriptSingle("squads/GUISquadSelect")
+    if gSquadSelect then
+        GetGUIManager():DestroyGUIScriptSingle("squads/GUISquadSelect")
+    end
     gSquadSelect = nil
 end
 
 local function ShowSquadSelectMenu()
-    if not gSquadSelect then
-        CreatequadSelectMenu()
-    end
-    if gSquadSelect then
+    CreatequadSelectMenuIfNotExists()
+    local player = Client.GetLocalPlayer()
+    if player:GetIsOnPlayingTeam() and not gSquadSelect:GetIsVisible() then
         gSquadSelect:SetIsVisible(true)
     end
 end
 
 local function HideSquadSelectMenu()
-    if gSquadSelect then
+    if gSquadSelect and gSquadSelect:GetIsVisible() then
         gSquadSelect:SetIsVisible(false)
     end
 end
@@ -35,12 +36,19 @@ local function ToggleSquadSelectMenu()
 end
 
 Event.Hook("Console_squad_menu", ToggleSquadSelectMenu)
-Client.HookNetworkMessage("ShowSquadSelect", ShowSquadSelectMenu)
 
 
-local function GetIsPlayingTeam(teamNumber)
-    return teamNumber == kTeam1Index or teamNumber == kTeam2Index
+local function ToggleSquadSelectMenuOnTeamChange()
+    local player = Client.GetLocalPlayer()
+    if player:GetIsOnPlayingTeam() then
+        ShowSquadSelectMenu()
+    elseif not player:GetIsOnPlayingTeam() then
+        -- NOTE when you join right after the map is loaded, player reports team 0
+        HideSquadSelectMenu()
+    end
 end
+
+Client.HookNetworkMessage("SquadMemberJoinedTeam", ToggleSquadSelectMenuOnTeamChange)
 
 
 local function SelectSquad(squadNumber)

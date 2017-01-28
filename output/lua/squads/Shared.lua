@@ -12,5 +12,5 @@ local function OnDumpSquads()
 end
 Event.Hook("Console_dump_squads", OnDumpSquads)
 
-Shared.RegisterNetworkMessage("ShowSquadSelect")
+Shared.RegisterNetworkMessage("SquadMemberJoinedTeam")
 Shared.RegisterNetworkMessage("SelectSquad", { squadNumber = "integer" })

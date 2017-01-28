@@ -56,10 +56,7 @@ end
 
 if Server then
     function SquadMemberMixin:OnJoinTeam()
-        local team = self:GetTeam()
-        if HasMixin(team, "SquadTeam") then
-            Server.SendNetworkMessage(self:GetClient(), "ShowSquadSelect", {}, true)
-        end
+        Server.SendNetworkMessage(self:GetClient(), "SquadMemberJoinedTeam", {}, true)
     end
 
 
