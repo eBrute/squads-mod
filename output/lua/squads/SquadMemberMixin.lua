@@ -8,7 +8,6 @@ SquadMemberMixin = CreateMixin(SquadMemberMixin)
 SquadMemberMixin.type = "SquadMember"
 
 SquadMemberMixin.networkVars = {
-    -- squadNumber = string.format("integer (0 to %d)", #kSquadType)
     squadNumber = "enum kSquadType"
 }
 
@@ -17,13 +16,13 @@ function SquadMemberMixin:__initmixin()
         self.squadNumber = kSquadType.Invalid
     end
     if Client then
-        self:AddFieldWatcher("squadNumber", SquadMemberMixin.OnSquadNumber)
+        self:AddFieldWatcher("squadNumber", SquadMemberMixin.OnSquadNumberChange)
     end
 end
 
-
-function SquadMemberMixin:OnSquadNumber()
-    Log("SquadNumber changed")
+if Client then
+    function SquadMemberMixin:OnSquadNumberChange()
+    end
 end
 
 -- NOTE does not notify squad, use SwitchToSquad()
@@ -61,11 +60,7 @@ if Server then
 
 
     function SquadMemberMixin:CopyPlayerDataFrom(oldPlayer)
-      Log("----")
-      if not oldPlayer then
-        Log("> oldplayer is nil!!!")
-        return
-      end
+      if not oldPlayer then return end
 
       local oldSquad = oldPlayer:GetSquad() -- this is the squad we were in
       if oldSquad then
@@ -77,13 +72,9 @@ if Server then
         local newSquad = self:GetSquad() -- new player already has the default squad because NS2Gamerules:OnEntityCreate joined the team
         if newSquad then
           newSquad:RemovePlayer(self)  -- remove the new player from the default squad
-        else
-          Log("> Entity Change within team but no newsquad!!!")
         end
         if oldSquad then
           oldSquad:AddPlayer(self)
-        else
-          Log("> Entity Change within team but no oldsquad!!!")
         end
       end
     end

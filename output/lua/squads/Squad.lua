@@ -3,10 +3,6 @@ class 'Squad'
 -- the squad keeps track of the playerids belonging to the squads
 -- it is in the responsibility of the squad to keep the players updated about changes in their squadnumber
 
-function Squad:OnCreate()
-    Print("SQUAD INIT") -- NOTE never called
-end
-
 function Squad:Initialize(teamNumber, squadNumber)
     self.teamNumber = teamNumber
     self.squadNumber = squadNumber
@@ -17,11 +13,9 @@ end
 function Squad:AddPlayer(player)
     table.insertunique(self.playerIds, player:GetId())
     player:SetSquadNumber(self.squadNumber)
-    Log("Player %s is now in Squad %s", player:GetId(), self.squadNumber)
 end
 
 function Squad:RemovePlayer(player)
-    Log("Player %s removed from Squad %s", player:GetId(), self.squadNumber)
     table.removevalue(self.playerIds, player:GetId())
     player:SetSquadNumber(kSquadType.Invalid)
 end

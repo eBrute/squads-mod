@@ -6,7 +6,6 @@ Script.Load("lua/Globals.lua")
 local oldTeamAddPlayer = Team.AddPlayer
 
 function Team:AddPlayer(player)
-	Log("ADDPLAYER %s to team %s", player:GetId(), self.teamName)
 	if HasMixin(self, "SquadTeam") and player and player:isa("Player") then
 		self:AddPlayerToSquadTeam(player)
 	end
@@ -16,7 +15,6 @@ end
 local oldTeamRemovePlayer = Team.RemovePlayer
 
 function Team:RemovePlayer(player)
-	Log("REMOVEPLAYER %s from team %s", player:GetId(), self.teamName)
 	if HasMixin(self, "SquadTeam") and player and player:isa("Player") then
 		self:RemovePlayerFromSquadTeam(player)
 	end
