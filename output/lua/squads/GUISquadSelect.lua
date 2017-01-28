@@ -24,7 +24,7 @@ end
 
 
 local function ScaledCoords(x, y)
-    return GUIScale(Vector(x, y, 0))
+    return Vector( GUIScaleWidth(x), GUIScaleHeight(y), 0)
 end
 
 
