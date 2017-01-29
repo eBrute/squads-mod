@@ -19,9 +19,11 @@ function Squad:AddPlayer(player)
     return false
 end
 
-function Squad:RemovePlayer(player)
+function Squad:RemovePlayer(player, notifyPlayer)
     table.removevalue(self.playerIds, player:GetId())
-    player:SetSquadNumber(kSquadType.Invalid)
+    if notifyPlayer then
+        player:SetSquadNumber(kSquadType.Invalid)
+    end
 end
 
 function Squad:RemovePlayerById(playerId)

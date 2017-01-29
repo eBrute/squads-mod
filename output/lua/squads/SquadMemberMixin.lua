@@ -27,6 +27,7 @@ end
 
 -- NOTE does not notify squad, use SwitchToSquad() instead
 function SquadMemberMixin:SetSquadNumber(squadNumber)
+    Log("Setting squadNumber to %s", squadNumber)
     self.squadNumber = squadNumber
 end
 
@@ -50,7 +51,7 @@ function SquadMemberMixin:SwitchToSquad(squadNumber)
         local oldSquadNumber = self.squadNumber
         local success = team:AddPlayerToSquad(self, squadNumber)
         if success then
-            team:RemovePlayerFromSquad(self, oldSquadNumber)
+            team:RemovePlayerFromSquad(self, oldSquadNumber, false)
         end
         return success
     end
@@ -64,22 +65,22 @@ if Server then
 
 
     function SquadMemberMixin:CopyPlayerDataFrom(oldPlayer)
-      if not oldPlayer then return end
+        if not oldPlayer then return end
 
-      local oldSquad = oldPlayer:GetSquad() -- this is the squad we were in
-      if oldSquad then
-        oldSquad:RemovePlayer(oldPlayer) -- oldPlayer is about to be destroyed, so remove him
-      end
-
-      if oldPlayer:GetTeamNumber() == self:GetTeamNumber() then
-        -- change occured in the same team (i.e. marine -> exo), so carry over the squad to the new entity
-        local newSquad = self:GetSquad() -- new player already has the default squad because NS2Gamerules:OnEntityCreate joined the team
-        if newSquad then
-          newSquad:RemovePlayer(self)  -- remove the new player from the default squad
-        end
+        local oldSquad = oldPlayer:GetSquad() -- this is the squad we were in
         if oldSquad then
-          oldSquad:AddPlayer(self)
+            oldSquad:RemovePlayer(oldPlayer) -- oldPlayer is about to be destroyed, so remove him
         end
-      end
+
+        if oldPlayer:GetTeamNumber() == self:GetTeamNumber() then
+            -- change occured in the same team (i.e. marine -> exo), so carry over the squad to the new entity
+            local newSquad = self:GetSquad() -- new player already has the default squad because NS2Gamerules:OnEntityCreate joined the team
+            if newSquad then
+                newSquad:RemovePlayer(self, true)  -- remove the new player from the default squad
+            end
+            if oldSquad then
+                oldSquad:AddPlayer(self)
+            end
+        end
     end
 end

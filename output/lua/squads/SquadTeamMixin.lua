@@ -29,17 +29,16 @@ end
 
 
 function SquadTeamMixin:RemovePlayerFromSquadTeamById(playerId)
-    local player = Shared.GetEntity(playerId)
-    if player and player:isa("Player") then
-        self:RemovePlayerFromSquadTeam(player)
-    end
+    for squadNumber = 1, #kSquadType do
+		self.squads[squadNumber]:RemovePlayerById(playerId)
+	end
 end
 
 
 function SquadTeamMixin:RemovePlayerFromSquadTeam(player)
     if HasMixin(player, "SquadMember") then
         local squadNumber = player:GetSquadNumber()
-        self:RemovePlayerFromSquad(player, squadNumber)
+        self:RemovePlayerFromSquad(player, squadNumber, true)
     end
 end
 
@@ -52,9 +51,9 @@ function SquadTeamMixin:AddPlayerToSquad(player, squadNumber)
 end
 
 
-function SquadTeamMixin:RemovePlayerFromSquad(player, squadNumber)
+function SquadTeamMixin:RemovePlayerFromSquad(player, squadNumber, notifyPlayer)
     if squadNumber ~= kSquadType.Invalid then
-        self.squads[squadNumber]:RemovePlayer(player)
+        self.squads[squadNumber]:RemovePlayer(player, notifyPlayer)
     end
 end
 
