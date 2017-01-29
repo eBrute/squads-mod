@@ -11,7 +11,7 @@ function PlayerUI_GetStatusInfoForUnit(player, unit)
     if unit and unit:isa("Player") and unit:GetShowUnitStatusFor(player)
     and HasMixin(unit, "SquadMember") and player:GetTeamNumber() == unit:GetTeamNumber() then
         local squadNumber = unit:GetSquadNumber()
-        if squadNumber >= kSquadType.Unassigned then
+        if squadNumber > kSquadType.Unassigned then
             -- NOTE NS2+ uses a table as hint, vanilla has a string
             if type(unitState.Hint) == 'table' then
                 if unitState.Hint.Hint and unitState.Hint.Hint == "" then
