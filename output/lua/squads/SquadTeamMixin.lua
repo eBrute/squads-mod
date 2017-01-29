@@ -40,6 +40,8 @@ function SquadTeamMixin:RemovePlayer(player)
 end
 
 
+-- if this is called, team is removing a playerId that is no longer a valid player
+-- so just try to remove from every squad
 function SquadTeamMixin:RemovePlayerById(playerId)
     for squadNumber = 1, #kSquadType do
         self.squads[squadNumber]:RemovePlayerById(playerId)
