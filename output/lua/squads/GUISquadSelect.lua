@@ -62,10 +62,7 @@ function GUISquadSelect:OnClick()
         local region = self.SquadRegions[squad]
         local mouseOver = GUIItemContainsPoint(region.background, Client.GetCursorPosScreen())
         if (mouseOver) then
-            local player = Client.GetLocalPlayer()
-            if HasMixin(player, "SquadMember") then
-                Client.SendNetworkMessage("SelectSquad", {squadNumber = squad}, true)
-            end
+            Client.SendNetworkMessage("SelectSquad", {squadNumber = squad}, true)
             return true
         end
     end
