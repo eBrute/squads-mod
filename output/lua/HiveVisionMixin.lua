@@ -108,38 +108,43 @@ if Client then
             visible = false
         end
 
-        -- Update the visibility status.
-        if visible ~= self.hiveSightVisible and self.timeHiveVisionChanged + 1 < now then
+        -- NOTE begin squad code
+        local isInSquad = HasMixin(self, "SquadMember") and not self:isa("AlienCommander") and self:GetSquadNumber() > kSquadType.Unassigned
+        local isInSameSquad = isInSquad and GetAreFriends(self, player) and self:GetSquadNumber() == player:GetSquadNumber()
+        local hasSquadOutline = (isInSameSquad and (player:isa("Alien") or player:isa("AlienSpectator"))) or (isInSquad and player:isa("AlienCommander"))
 
-            -- NOTE begin squad code
-            local isInSquad = HasMixin(self, "SquadMember") and not self:isa("AlienCommander") and self:GetSquadNumber() > kSquadType.Unassigned
-            local isInSameSquad = isInSquad and GetAreFriends(self, player) and self:GetSquadNumber() == player:GetSquadNumber()
-            local hasSquadOutline = (isInSameSquad and (player:isa("Alien") or player:isa("AlienSpectator"))) or (isInSquad and player:isa("AlienCommander"))
-            -- NOTE end squad code
+        local outlineColor
+        if visible then
+            if hasSquadOutline then
+                local squadNumber = self:GetSquadNumber()
+                outlineColor = HiveVision_GetSquadColor(squadNumber)
+            elseif parasited then
+                outlineColor = kHiveVisionOutlineColor.Yellow
+            elseif self:isa("Gorge") then
+                outlineColor = kHiveVisionOutlineColor.Green
+            else
+                outlineColor = kHiveVisionOutlineColor.KharaaOrange
+            end
+        else
+            outlineColor = self.lastOutlineColor -- safe some computations if not visible
+        end
+
+        -- Update the visibility status.
+        if visible ~= self.hiveSightVisible and self.timeHiveVisionChanged + 1 < now or outlineColor ~= self.lastOutlineColor then
+
+        -- NOTE end squad code
 
             local model = self:GetRenderModel()
             if model ~= nil then
 
+                -- NOTE begin squad code
+                HiveVision_RemoveModel( model )
                 if visible then
-                    -- NOTE begin squad code
-                    if hasSquadOutline then
-                        local squadNumber = self:GetSquadNumber()
-                        local outlineColor = HiveVision_GetSquadColor(squadNumber)
-                        HiveVision_AddModel( model, outlineColor )
-                    -- NOTE end squad code
-                    elseif parasited then
-                        HiveVision_AddModel( model, kHiveVisionOutlineColor.Yellow )
-                    elseif self:isa("Gorge") then
-                        HiveVision_AddModel( model, kHiveVisionOutlineColor.Green )
-                    else
-                        HiveVision_AddModel( model, kHiveVisionOutlineColor.KharaaOrange )
-                    end
-                    --DebugPrint("%s add model", self:GetClassName())
-                else
-                    HiveVision_RemoveModel( model )
-                    --DebugPrint("%s remove model", self:GetClassName())
+                    HiveVision_AddModel( model, outlineColor )
                 end
 
+                self.outlineColor = outlineColor
+                -- NOTE end squad code
                 self.hiveSightVisible = visible
                 self.timeHiveVisionChanged = now
 
