@@ -69,7 +69,6 @@ function GUISquadSelect:OnClick()
                     Client.SendNetworkMessage("SelectSquad", {squadNumber = squad}, true)
                 end
             end
-            self:Close()
             return true
         end
     end

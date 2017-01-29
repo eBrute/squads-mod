@@ -11,8 +11,12 @@ function Squad:Initialize(teamNumber, squadNumber)
 end
 
 function Squad:AddPlayer(player)
-    table.insertunique(self.playerIds, player:GetId())
-    player:SetSquadNumber(self.squadNumber)
+    if #self.playerIds < kMaxSquadsMembersPerSquad or self.squadNumber == kSquadType.Unassigned then
+        table.insertunique(self.playerIds, player:GetId())
+        player:SetSquadNumber(self.squadNumber)
+        return true
+    end
+    return false
 end
 
 function Squad:RemovePlayer(player)

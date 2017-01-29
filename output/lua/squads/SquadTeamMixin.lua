@@ -47,8 +47,9 @@ end
 
 function SquadTeamMixin:AddPlayerToSquad(player, squadNumber)
     if squadNumber ~= kSquadType.Invalid then
-        self.squads[squadNumber]:AddPlayer(player)
+        return self.squads[squadNumber]:AddPlayer(player)
     end
+    return false
 end
 
 

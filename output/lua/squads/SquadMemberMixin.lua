@@ -47,8 +47,12 @@ end
 function SquadMemberMixin:SwitchToSquad(squadNumber)
     local team = self:GetTeam()
     if HasMixin(team, "SquadTeam") then
-        team:RemovePlayerFromSquad(self, self.squadNumber)
-        team:AddPlayerToSquad(self, squadNumber)
+        local oldSquadNumber = self.squadNumber
+        local success = team:AddPlayerToSquad(self, squadNumber)
+        if success then
+            team:RemovePlayerFromSquad(self, oldSquadNumber)
+        end
+        return success
     end
 end
 

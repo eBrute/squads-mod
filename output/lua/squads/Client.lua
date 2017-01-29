@@ -27,6 +27,9 @@ local function HideSquadSelectMenu()
     end
 end
 
+Client.HookNetworkMessage("SquadMemberJoinedSquad", HideSquadSelectMenu)
+
+
 local function ToggleSquadSelectMenu()
     if gSquadSelect and gSquadSelect:GetIsVisible() then
         HideSquadSelectMenu()
