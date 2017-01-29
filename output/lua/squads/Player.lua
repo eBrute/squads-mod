@@ -1,3 +1,5 @@
+-- Hook to make player a squadmember
+
 Script.Load("lua/squads/SquadMemberMixin.lua")
 
 local oldPlayerOnCreate = Player.OnCreate

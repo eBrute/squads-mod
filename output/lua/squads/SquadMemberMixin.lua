@@ -11,6 +11,7 @@ SquadMemberMixin.networkVars = {
     squadNumber = "enum kSquadType"
 }
 
+
 function SquadMemberMixin:__initmixin()
     if Server then
         self.squadNumber = kSquadType.Invalid
@@ -20,14 +21,15 @@ function SquadMemberMixin:__initmixin()
     end
 end
 
+
 if Client then
     function SquadMemberMixin:OnSquadNumberChange()
     end
 end
 
+
 -- NOTE does not notify squad, use SwitchToSquad() instead
 function SquadMemberMixin:SetSquadNumber(squadNumber)
-    Log("Setting squadNumber to %s", squadNumber)
     self.squadNumber = squadNumber
 end
 
@@ -59,6 +61,7 @@ end
 
 
 if Server then
+
     function SquadMemberMixin:OnJoinTeam()
         Server.SendNetworkMessage(self:GetClient(), "SquadMemberJoinedTeam", {}, true)
     end
@@ -83,4 +86,5 @@ if Server then
             end
         end
     end
+
 end

@@ -1,3 +1,7 @@
+-- Hook to add the squadnumber to the PlayerInfoEntity
+-- PlayerInfoEntity is created together with the player, player knows about his PlayerInfoEntity
+-- PlayerInfoEntity is relevant even when player is not, and is used to sync properties of the player
+
 Script.Load("lua/Globals.lua")
 
 local playerInfoNetworkVars =
@@ -17,7 +21,6 @@ function PlayerInfoEntity:UpdateScore()
             if HasMixin(scorePlayer, "SquadMember") then
                 self.squadNumber = scorePlayer:GetSquadNumber()
             end
-            --Log("PlayerInfoEntity %s", self.squadNumber)
         end
 
     end

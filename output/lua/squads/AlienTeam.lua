@@ -1,3 +1,5 @@
+-- Hook to make AlienTeam a SquadTeam
+
 Script.Load("lua/squads/SquadTeamMixin.lua")
 
 local oldAlienTeamInitialize = AlienTeam.Initialize

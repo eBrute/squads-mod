@@ -1,5 +1,6 @@
 -- a squadteam is a team that has several squads
 -- the squadteam informs the squads about joining/leaving players
+-- squadteam assigns the default squad
 
 Script.Load("lua/Globals.lua")
 Script.Load("lua/squads/Squad.lua")

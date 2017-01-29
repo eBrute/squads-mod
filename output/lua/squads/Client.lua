@@ -1,3 +1,5 @@
+-- Hook to handle squad select menu loading and closing
+
 gSquadSelect = nil
 
 local function CreatequadSelectMenuIfNotExists()

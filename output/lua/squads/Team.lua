@@ -1,3 +1,6 @@
+-- Hook into team to keep squads informed about changes in the team
+-- handle different kinds of resets
+
 Script.Load("lua/Table.lua")
 Script.Load("lua/Globals.lua")
 

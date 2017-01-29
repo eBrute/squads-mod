@@ -1,3 +1,6 @@
+-- Hook to change the hint text for squad members
+-- hint text is used in GUIUnitStatus
+
 Script.Load("lua/Globals.lua")
 
 local oldPlayerUI_GetStatusInfoForUnit = PlayerUI_GetStatusInfoForUnit

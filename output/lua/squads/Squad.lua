@@ -10,6 +10,7 @@ function Squad:Initialize(teamNumber, squadNumber)
     self.playerIds = {}
 end
 
+
 function Squad:AddPlayer(player)
     if #self.playerIds < kMaxSquadsMembersPerSquad or self.squadNumber == kSquadType.Unassigned then
         table.insertunique(self.playerIds, player:GetId())
@@ -19,6 +20,7 @@ function Squad:AddPlayer(player)
     return false
 end
 
+
 function Squad:RemovePlayer(player, notifyPlayer)
     table.removevalue(self.playerIds, player:GetId())
     if notifyPlayer then
@@ -26,13 +28,16 @@ function Squad:RemovePlayer(player, notifyPlayer)
     end
 end
 
+
 function Squad:RemovePlayerById(playerId)
     table.removevalue(self.playerIds, playerId)
 end
 
+
 function Squad:GetSize()
     return #self.playerIds
 end
+
 
 function Squad:GetName()
     return self.squadName
@@ -41,6 +46,7 @@ end
 function Squad:GetNumber()
     return self.squadNumber
 end
+
 
 function Squad:Reset()
     for _, playerId in ipairs(self.playerIds) do
@@ -51,6 +57,7 @@ function Squad:Reset()
     end
     self.playerIds = {}
 end
+
 
 function Squad:Dump()
     Log("Squad #%s.%s: [%s] Players: %s", self.teamNumber, self.squadNumber, self.squadName, self.playerIds)
