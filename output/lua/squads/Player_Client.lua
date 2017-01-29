@@ -17,13 +17,13 @@ function PlayerUI_GetStatusInfoForUnit(player, unit)
         if squadNumber > kSquadType.Unassigned then
             -- NOTE NS2+ uses a table as hint, vanilla has a string
             if type(unitState.Hint) == 'table' then
-                if unitState.Hint.Hint and unitState.Hint.Hint == "" then
+                if not unitState.Hint.Hint or unitState.Hint.Hint == "" then
                     unitState.Hint.Hint = kSquadNames[squadNumber]
                 else
                     unitState.Hint.Hint = kSquadNames[squadNumber] .. " (" .. unitState.Hint.Hint .. ")"
                 end
             else
-                if unitState.Hint == "" then
+                if not unitState.Hint or unitState.Hint == "" then
                     unitState.Hint = kSquadNames[squadNumber]
                 else
                     unitState.Hint = kSquadNames[squadNumber] .. " (" .. unitState.Hint .. ")"
