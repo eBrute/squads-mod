@@ -173,8 +173,8 @@ function GUISquadSelect:Update(deltaTime)
                     if players[p].SteamId == Client.GetSteamId() then
                         playerSlot.playerIcon:SetIsVisible(true)
                         playerSlot.playerIcon:SetTexture(GUISquadSelect.kSquadArrow)
-                    elseif players[p].IsCommander then
-                        slotUsed = false
+                    -- elseif players[p].IsCommander and squad ~= kSquadType.Unassigned then
+                    --    slotUsed = false -- dont show commanders in squad menu
                     elseif players[p].IsSteamFriend then
                         playerSlot.playerIcon:SetIsVisible(true)
                         playerSlot.playerIcon:SetTexture(GUISquadSelect.kSquadFriends)
