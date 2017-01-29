@@ -23,22 +23,25 @@ function SquadTeamMixin:GetSquad(squadNumber)
 end
 
 
-function SquadTeamMixin:AddPlayerToSquadTeam(player)
-    self:AddPlayerToSquad(player, kSquadType.Unassigned)
+-- NOTE on teamswitch, AddPlayer happens before RemovePlayer
+function SquadTeamMixin:AddPlayer(player)
+    if player and player:isa("Player") then
+        self:AddPlayerToSquad(player, kSquadType.Unassigned)
+    end
 end
 
 
-function SquadTeamMixin:RemovePlayerFromSquadTeamById(playerId)
-    for squadNumber = 1, #kSquadType do
-		self.squads[squadNumber]:RemovePlayerById(playerId)
-	end
-end
-
-
-function SquadTeamMixin:RemovePlayerFromSquadTeam(player)
+function SquadTeamMixin:RemovePlayer(player)
     if HasMixin(player, "SquadMember") then
         local squadNumber = player:GetSquadNumber()
         self:RemovePlayerFromSquad(player, squadNumber, true)
+    end
+end
+
+
+function SquadTeamMixin:RemovePlayerById(playerId)
+    for squadNumber = 1, #kSquadType do
+        self.squads[squadNumber]:RemovePlayerById(playerId)
     end
 end
 

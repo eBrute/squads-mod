@@ -1,27 +1,6 @@
 Script.Load("lua/Table.lua")
 Script.Load("lua/Globals.lua")
 
--- NOTE on teamswitch, AddPlayer happens before RemovePlayer
-
-local oldTeamAddPlayer = Team.AddPlayer
-
-function Team:AddPlayer(player)
-	if HasMixin(self, "SquadTeam") and player and player:isa("Player") then
-		self:AddPlayerToSquadTeam(player)
-	end
-	return oldTeamAddPlayer(self, player)
-end
-
-local oldTeamRemovePlayer = Team.RemovePlayer
-
-function Team:RemovePlayer(player)
-	if HasMixin(self, "SquadTeam") and player and player:isa("Player") then
-		self:RemovePlayerFromSquadTeam(player)
-	end
-	return oldTeamRemovePlayer(self, player)
-end
-
-
 local gIsPlayerPreservingReset = false
 local oldTeamReset = Team.Reset
 
@@ -55,7 +34,7 @@ function Team:ForEachPlayer(functor)
         else
             table.remove( self.playerIds, i )
 			if HasMixin(self, "SquadTeam") then
-				self:RemovePlayerFromSquadTeamById(playerId)
+				self:RemovePlayerById(playerId)
 			end
         end
     end
