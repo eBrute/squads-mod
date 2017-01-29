@@ -831,7 +831,7 @@ function GUIScoreboard:UpdateTeam(updateTeam)
         player["Deaths"]:SetColor(baseColor)
         player["Status"]:SetColor(statusColor)
         -- NOTE begin squad code
-        if isVisibleTeam and squadNumber > 1 then
+        if isVisibleTeam and squadNumber > 1 and not isCommander then
             player["Status"]:SetColor(kSquadColors[squadNumber])
         end
         -- NOTE end squad code
