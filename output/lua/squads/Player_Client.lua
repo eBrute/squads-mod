@@ -3,7 +3,6 @@ Script.Load("lua/Globals.lua")
 local oldPlayerUI_GetStatusInfoForUnit = PlayerUI_GetStatusInfoForUnit
 
 function PlayerUI_GetStatusInfoForUnit(player, unit)
-    -- Log("PlayerUI_GetStatusInfoForUnit")
     unitState = oldPlayerUI_GetStatusInfoForUnit(player, unit)
     if not unitState then
         return unitState

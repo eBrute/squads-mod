@@ -25,7 +25,7 @@ if Client then
     end
 end
 
--- NOTE does not notify squad, use SwitchToSquad()
+-- NOTE does not notify squad, use SwitchToSquad() instead
 function SquadMemberMixin:SetSquadNumber(squadNumber)
     self.squadNumber = squadNumber
 end
