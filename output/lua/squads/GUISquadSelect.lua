@@ -18,7 +18,8 @@ for i, texture in pairs(kSquadMenuBackgroundTextures) do
 end
 GUISquadSelect.kSounds = {
     hovar = "sound/NS2.fev/common/hovar",
-    click = "sound/NS2.fev/common/button_click"
+    click = "sound/NS2.fev/common/button_click",
+    invalid =  "sound/NS2.fev/common/invalid",
 }
 for _, soundAsset in pairs(GUIFeedbackState_Reason.kSounds) do
     Client.PrecacheLocalSound(soundAsset)
@@ -61,13 +62,9 @@ function GUISquadSelect:OnClick()
         local region = self.SquadRegions[squad]
         local mouseOver = GUIItemContainsPoint(region.background, Client.GetCursorPosScreen())
         if (mouseOver) then
-            StartSoundEffect(GUISquadSelect.kSounds.click)
             local player = Client.GetLocalPlayer()
             if HasMixin(player, "SquadMember") then
-                local currentSquadNumber = player:GetSquadNumber()
-                if currentSquadNumber ~= squad then
-                    Client.SendNetworkMessage("SelectSquad", {squadNumber = squad}, true)
-                end
+                Client.SendNetworkMessage("SelectSquad", {squadNumber = squad}, true)
             end
             return true
         end

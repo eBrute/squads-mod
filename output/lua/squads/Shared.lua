@@ -13,5 +13,5 @@ end
 Event.Hook("Console_dump_squads", OnDumpSquads)
 
 Shared.RegisterNetworkMessage("SquadMemberJoinedTeam")
-Shared.RegisterNetworkMessage("SquadMemberJoinedSquad")
+Shared.RegisterNetworkMessage("SquadMemberJoinedSquad", { success = "boolean" })
 Shared.RegisterNetworkMessage("SelectSquad", { squadNumber = "integer" })

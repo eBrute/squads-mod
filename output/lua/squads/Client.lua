@@ -27,7 +27,16 @@ local function HideSquadSelectMenu()
     end
 end
 
-Client.HookNetworkMessage("SquadMemberJoinedSquad", HideSquadSelectMenu)
+local function OnSquadMemberJoinedSquad(message)
+    if message.success then
+        StartSoundEffect(GUISquadSelect.kSounds.click)
+        HideSquadSelectMenu()
+    else
+        StartSoundEffect(GUISquadSelect.kSounds.invalid)
+    end
+end
+
+Client.HookNetworkMessage("SquadMemberJoinedSquad", OnSquadMemberJoinedSquad)
 
 
 local function ToggleSquadSelectMenu()
