@@ -309,10 +309,6 @@ function GUISquadSelect:_InitializeBackground()
         end
 
         self.SquadRegions[i] = squadRegion
-
-        -- Log("x:%s y:%s, colWidth:%s, halfHeight:%s, fullHeight:%s", xOffset, yOffset, columnWidth, halfHeight, fullHeight)
-        -- Log("ScreenPosition: %s", self.SquadRegions[i]:GetScreenPosition(Client.GetScreenWidth(), Client.GetScreenHeight()))
-        -- Log("ScaledSize: %s",self.SquadRegions[i]:GetScaledSize())
     end
 
 end
