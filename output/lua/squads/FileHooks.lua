@@ -6,3 +6,5 @@ ModLoader.SetupFileHook( "lua/Player.lua",           "lua/squads/Player.lua",   
 ModLoader.SetupFileHook( "lua/Player_Client.lua",    "lua/squads/Player_Client.lua",    "post" )
 ModLoader.SetupFileHook( "lua/PlayerInfoEntity.lua", "lua/squads/PlayerInfoEntity.lua", "post" )
 ModLoader.SetupFileHook( "lua/Scoreboard.lua",       "lua/squads/Scoreboard.lua",       "post" )
+ModLoader.SetupFileHook( "lua/EquipmentOutline.lua", "lua/squads/EquipmentOutline.lua", "post" )
+ModLoader.SetupFileHook( "lua/HiveVision.lua",       "lua/squads/HiveVision.lua",       "post" )
