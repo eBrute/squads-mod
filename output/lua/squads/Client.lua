@@ -31,10 +31,14 @@ end
 
 local function OnSquadMemberJoinedSquad(message)
     if message.success then
-        StartSoundEffect(GUISquadSelect.kSounds.click)
-        HideSquadSelectMenu()
+        if gSquadSelect then
+            StartSoundEffect(GUISquadSelect.kSounds.click)
+            HideSquadSelectMenu()
+        end
     else
-        StartSoundEffect(GUISquadSelect.kSounds.invalid)
+        if gSquadSelect then
+            StartSoundEffect(GUISquadSelect.kSounds.invalid)
+        end
     end
 end
 
