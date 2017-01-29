@@ -234,7 +234,7 @@ function GUISquadSelect:_InitializeBackground()
         squadRegion.background:SetSize( ScaledCoords( columnWidth, ConditionalValue(i==kSquadType.Unassigned, fullHeight, halfHeight)) )
         squadRegion.background:SetTexture( self.kSquadInactiveBackgrounds[i] )
         squadRegion.background:SetInheritsParentAlpha( true )
-        self.screen:AddChild( squadRegion.background )
+        squadRegion.background:AddAsChildTo( self.screen )
 
         squadRegion.squadName = GetGUIManager():CreateTextItem()
         squadRegion.squadName:SetLayer( kGUILayerMainMenuDialogs )
@@ -249,7 +249,7 @@ function GUISquadSelect:_InitializeBackground()
         squadRegion.squadName:SetColor( kSquadColors[i] )
         squadRegion.squadName:SetText( kSquadNames[i] )
         squadRegion.squadName:SetInheritsParentAlpha( false )
-        squadRegion.background:AddChild( squadRegion.squadName )
+        squadRegion.squadName:AddAsChildTo( squadRegion.background )
 
         squadRegion.content = GUIManager:CreateGraphicItem()
         squadRegion.content:SetLayer( kGUILayerMainMenuDialogs )
@@ -258,7 +258,7 @@ function GUISquadSelect:_InitializeBackground()
         squadRegion.content:SetSize( ScaledCoords(columnWidth - contentMargin.left - contentMargin.right, ConditionalValue(i==kSquadType.Unassigned, fullHeight, halfHeight) - contentMargin.top - contentMargin.bottom) )
         squadRegion.content:SetColor(Color(1,1,1,0))
         squadRegion.content:SetInheritsParentAlpha( false )
-        squadRegion.background:AddChild( squadRegion.content )
+        squadRegion.content:AddAsChildTo( squadRegion.background )
 
         squadRegion.playerSlots = {}
         for j = 1, GetSquadMaxPlayerSlots(i) do
@@ -273,7 +273,7 @@ function GUISquadSelect:_InitializeBackground()
             playerSlot.content:SetSize( ScaledCoords(columnWidth - contentMargin.left - contentMargin.right, 28) )
             playerSlot.content:SetColor(Color(1,1,1,0))
             playerSlot.content:SetInheritsParentAlpha( false )
-            squadRegion.content:AddChild( playerSlot.content )
+            playerSlot.content:AddAsChildTo( squadRegion.content )
 
             playerSlot.playerIcon = GetGUIManager():CreateGraphicItem()
             playerSlot.playerIcon:SetLayer( kGUILayerMainMenuDialogs )
@@ -282,7 +282,7 @@ function GUISquadSelect:_InitializeBackground()
             playerSlot.playerIcon:SetSize( ScaledCoords(28, 28) )
             playerSlot.playerIcon:SetIsVisible( false )
             playerSlot.playerIcon:SetInheritsParentAlpha( false )
-            playerSlot.content:AddChild( playerSlot.playerIcon )
+            playerSlot.playerIcon:AddAsChildTo( playerSlot.content )
 
             playerSlot.playerName = GetGUIManager():CreateTextItem()
             playerSlot.playerName:SetLayer( kGUILayerMainMenuDialogs )
@@ -297,7 +297,7 @@ function GUISquadSelect:_InitializeBackground()
             playerSlot.playerName:SetTextClipped(true, playerSlot.content:GetSize().x - GUIScaleWidth(64), 40) -- these numbers kind of work, no idea why
             playerSlot.playerName:SetColor( kSquadMenuPlayerColors[0] )
             playerSlot.playerName:SetInheritsParentAlpha( false )
-            playerSlot.content:AddChild( playerSlot.playerName )
+            playerSlot.playerName:AddAsChildTo( playerSlot.content )
 
             squadRegion.playerSlots[j] = playerSlot
         end
