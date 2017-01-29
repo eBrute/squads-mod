@@ -24,8 +24,7 @@ end
 
 
 function SquadTeamMixin:AddPlayerToSquadTeam(player)
-    -- self:AddPlayerToSquad(player, kSquadType.Unassigned) -- NOTE
-    self:AddPlayerToSquad(player, kSquadType.Squad5)
+    self:AddPlayerToSquad(player, kSquadType.Unassigned)
 end
 
 
