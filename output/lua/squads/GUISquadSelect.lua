@@ -26,6 +26,11 @@ for _, soundAsset in pairs(GUIFeedbackState_Reason.kSounds) do
 end
 
 
+function GUIItem:AddAsChildTo(item)
+    item:AddChild(self)
+end
+
+
 local function ScaledCoords(x, y)
     return Vector( GUIScaleWidth(x), GUIScaleHeight(y), 0)
 end
