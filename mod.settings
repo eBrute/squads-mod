@@ -1,9 +1,0 @@
-name        = "Squads - dev"
-source_dir  = "source"
-output_dir  = "output"
-description = [=[Work in progress. Unfinished.
-modid: 32acb643]=]
-image       = "preview.jpg"
-tag_modtype = "Gameplay Tweak"
-tag_support = "Must be run on Server"
-publish_id = "32acb643"
