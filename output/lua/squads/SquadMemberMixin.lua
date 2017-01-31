@@ -2,7 +2,7 @@
 -- the squad number and the team number together identify the squad
 -- if the team is not a squadteam, the squad number shall be kSquadType.Invalid
 
-Script.Load("lua/Globals.lua")
+Script.Load("lua/squads/Globals.lua")
 
 SquadMemberMixin = CreateMixin(SquadMemberMixin)
 SquadMemberMixin.type = "SquadMember"
@@ -61,12 +61,6 @@ end
 
 
 if Server then
-
-    function SquadMemberMixin:OnJoinTeam()
-        Server.SendNetworkMessage(self:GetClient(), "SquadMemberJoinedTeam", {}, true)
-    end
-
-
     function SquadMemberMixin:CopyPlayerDataFrom(oldPlayer)
         if not oldPlayer then return end
 
@@ -84,7 +78,8 @@ if Server then
             if oldSquad then
                 oldSquad:AddPlayer(self)
             end
+        else
+            Server.SendNetworkMessage(self:GetClient(), "SquadMemberJoinedTeam", {oldTeam = oldPlayer:GetTeamNumber(), newTeam = self:GetTeamNumber()}, true)
         end
     end
-
 end

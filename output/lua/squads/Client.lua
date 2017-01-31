@@ -2,6 +2,11 @@
 
 gSquadSelect = nil
 
+local function GetTeamHasSquads(team)
+    return team == kTeam1Index
+        or team == kTeam2Index
+end
+
 local function CreatequadSelectMenuIfNotExists()
     if not gSquadSelect then
         gSquadSelect = GetGUIManager():CreateGUIScriptSingle("squads/GUISquadSelect")
@@ -17,8 +22,7 @@ end
 
 local function ShowSquadSelectMenu()
     CreatequadSelectMenuIfNotExists()
-    local player = Client.GetLocalPlayer()
-    if player:GetIsOnPlayingTeam() and not gSquadSelect:GetIsVisible() then
+    if not gSquadSelect:GetIsVisible() then
         gSquadSelect:SetIsVisible(true)
     end
 end
@@ -49,19 +53,20 @@ local function ToggleSquadSelectMenu()
     if gSquadSelect and gSquadSelect:GetIsVisible() then
         HideSquadSelectMenu()
     else
-        ShowSquadSelectMenu()
+        local player = Client.GetLocalPlayer()
+        if GetTeamHasSquads(player:GetTeamNumber()) then
+            ShowSquadSelectMenu()
+        end
     end
 end
 
 Event.Hook("Console_squad_menu", ToggleSquadSelectMenu)
 
 
-local function ToggleSquadSelectMenuOnTeamChange()
-    local player = Client.GetLocalPlayer()
-    if player:GetIsOnPlayingTeam() then
+local function ToggleSquadSelectMenuOnTeamChange(message)
+    if GetTeamHasSquads(message.newTeam) then
         ShowSquadSelectMenu()
-    elseif not player:GetIsOnPlayingTeam() then
-        -- NOTE when you join right after the map is loaded, player reports team 0
+    else
         HideSquadSelectMenu()
     end
 end
