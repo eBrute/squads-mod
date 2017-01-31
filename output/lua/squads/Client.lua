@@ -3,8 +3,7 @@
 gSquadSelect = nil
 
 local function GetTeamHasSquads(team)
-    return team == kTeam1Index
-        or team == kTeam2Index
+    return kSquadTeams[team]
 end
 
 local function CreatequadSelectMenuIfNotExists()

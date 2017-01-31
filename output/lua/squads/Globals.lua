@@ -1,3 +1,8 @@
+kSquadTeams = {
+	[kTeam1Index] = true,
+	[kTeam2Index] = true
+}
+
 kMaxSquadsMembersPerSquad = 8
 
 kSquadType = enum {
