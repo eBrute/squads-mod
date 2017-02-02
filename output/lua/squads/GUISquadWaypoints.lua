@@ -5,301 +5,278 @@ Script.Load("lua/GUIAnimatedScript.lua")
 
 class 'GUISquadWaypoints' (GUIAnimatedScript)
 
-local kMarineTextureName = PrecacheAsset("ui/marine_order.dds")
-local kAlienTextureName = PrecacheAsset("ui/alien_order.dds")
+GUISquadWaypoints.kMarineLineMaterialName = PrecacheAsset("ui/WaypointPath.material")
+GUISquadWaypoints.kAlienLineMaterialName = PrecacheAsset("ui/WaypointPath_alien.material")
 
-local kArrowModel = PrecacheAsset("models/commander_tutorial/big_arrow.model")
-local kArrowAlienModel = PrecacheAsset("models/commander_tutorial/big_arrow.model")
--- local kArrowAlienModel = PrecacheAsset("models/misc/effects/halo_wide_green.model")
--- local kArrowModel = PrecacheAsset("models/misc/speed/speed.model")
--- local kArrowAlienModel = PrecacheAsset("models/misc/sentry_arc/sentry_line.model")
--- local kArrowModel = PrecacheAsset("models/misc/commander_arrow.model")
--- local kArrowAlienModel = PrecacheAsset("models/misc/commander_arrow_aliens.model")
--- local kArrowModel = PrecacheAsset("models/misc/waypoint_arrow.model")
--- local kArrowAlienModel = PrecacheAsset("models/misc/waypoint_arrow_alien.model")
-local kArrowScaleSpeed = 8
-local kArrowMoveToleranceSquared = 6 * 6
--- This is the closest an arrow can be to the player.
-local kArrowMinDistToPlayerSquared = 3 * 3
-local kArrowMinDistToTargetSquared = 1.5 * 1.5
-
+local kLineSegmentsUpdateInterval = kUpdateIntervalMedium
+local kPathUpdateInterval = 5
+local kLineWidth = 0.44
+local kLineFadeInSpeed = 8
+local kLineFadeOutSpeed = 2
+local kMaxDistToPlayerSquared = 8 * 8
+local kMinDistToPlayer = 3
+local kMinDistToTarget = 1.5
+local kMaxPathLength = 30
 
 function GUISquadWaypoints:Initialize()
-
-    -- UpdateItemsGUIScale(self) -- NOTE causes errors
-
     GUIAnimatedScript.Initialize(self, 0)
-
-
     self.nextUpdatePathTime = 0
-
-    self.screenDiagonalLength = math.sqrt(Client.GetScreenHeight()/2) ^ 2 + (Client.GetScreenWidth()/2)
-
-
-    self.line = Client.CreateRenderDynamicMesh(RenderScene.Zone_Default)
-    self.line:SetMaterial(Commander.kMarineLineMaterialName)
-    self.line:SetIsVisible(true)
-
-    -- All arrow assets are stored here.
-    self.arrows = table.array(8)
-    -- The arrows currently being used in the world are stored here.
-    self.worldArrows = table.array(8)
-    self.hideArrows = table.array(8)
-
+    self.lastUpdateLinesTime = 0
+    self.pathPoints = {}
+    self.lineSegments = table.array(40)
 end
 
 
 local function InitMarineTexture(self)
-
-    self.arrowModelName = kArrowModel
+    self.lineMaterial = GUISquadWaypoints.kMarineLineMaterialName
     self.lightColor = Color(0.2, 0.2, 1, 1)
+    self.lightColor = Color(0.39, 0.29, 0.62, 1)
     self.marineWaypointLoaded = true
-
-    self.usedTexture = kMarineTextureName
-
 end
 
 
 local function InitAlienTexture(self)
-
-    self.arrowModelName = kArrowAlienModel
-    self.lightColor = Color(1, 0.2, 0.2, 1) -- TODO get squad color
+    self.lineMaterial = GUISquadWaypoints.kAlienLineMaterialName
+    self.lightColor = Color(1, 0.2, 0.2, 1)
+    self.lightColor = Color(0.39, 0.29, 0.62, 1)
     self.marineWaypointLoaded = false
-
-    self.usedTexture = kAlienTextureName
-
 end
+
 
 function GUISquadWaypoints:Uninitialize()
-
     GUIAnimatedScript.Uninitialize(self)
-
-    for a = 1, #self.arrows do
-
-        Client.DestroyRenderModel(self.arrows[a].model)
-        Client.DestroyRenderLight(self.arrows[a].light)
-
-    end
-
-    self.arrows = nil
-    self.worldArrows = nil
-
-    if self.line then
-        Client.DestroyRenderDynamicMesh(self.line)
-    end
+    self:DestroyLineSegments()
+    self.lineSegments = nil
+    self.pathPoints = nil
+    self.nextUpdatePathTime = nil
+    self.lastUpdateLinesTime = nil
 end
 
 
-local function FindClosestWorldArrow(self, toPoint, playerOrigin)
+local kSquareTexCoords = { 1,1, 0,1, 0,0, 1,0 }
+local kSquareIndices = { 3, 0, 1, 1, 2, 3 }
+local kSquareColors = { 1,1,1,1, 1,1,1,1, 1,1,1,1, 1,1,1,1, }
+local function UpdateMesh(line)
 
-    local closestArrow = nil
-    local closestDist = math.huge
-    for a = 1, #self.worldArrows do
-        local checkArrow = self.worldArrows[a]
-        local arrowOrigin = checkArrow.model:GetCoords().origin
-        local dist = (arrowOrigin - toPoint):GetLengthSquared()
-        if dist < closestDist then
-            closestArrow = checkArrow
-            closestDist = dist
+    local startPoint = line.startPoint
+    local endPoint = line.endPoint
+    local pathVector = endPoint - startPoint
+    pathVector.y = 0
+    local sideVector = pathVector:CrossProduct(Vector(0, 1, 0))
+
+    sideVector:Normalize()
+    sideVector:Scale(kLineWidth * line.scale)
+
+    local meshVertices = {
+        endPoint.x + sideVector.x, endPoint.y, endPoint.z + sideVector.z,
+        endPoint.x - sideVector.x, endPoint.y, endPoint.z - sideVector.z,
+        startPoint.x - sideVector.x, startPoint.y, startPoint.z - sideVector.z,
+        startPoint.x + sideVector.x, startPoint.y, startPoint.z + sideVector.z,
+    }
+
+    line.mesh:SetIndices(kSquareIndices, 6) -- #kSquareIndices
+    line.mesh:SetTexCoords(kSquareTexCoords, 8) -- #kSquareTexCoords
+    line.mesh:SetVertices(meshVertices, 12) -- #meshVertices
+    line.mesh:SetColors(kSquareColors, 16) -- #kSquareColors
+
+end
+
+
+function GUISquadWaypoints:CreateLineSegment(startPoint, endPoint, length, scale)
+    local line = {}
+    line.hasMesh = false
+    line.scale = scale or 0
+    line.startPoint = startPoint
+    line.endPoint = endPoint
+    line.length = length or (startPoint - endPoint):GetLength()
+    return line
+end
+
+
+function GUISquadWaypoints:DestroyLineSegments()
+    for a = 1, #self.lineSegments do
+        local line = self.lineSegments[a]
+        if line.hasMesh then
+            Client.DestroyRenderDynamicMesh(line.mesh)
+        end
+        if line.light then
+            Client.DestroyRenderLight(line.light)
         end
     end
-
-
-    if closestDist < kArrowMoveToleranceSquared then
-        return closestArrow
-    end
-
-    return nil
+    self.lineSegments = table.array(40)
 end
 
 
-local function GetFreeArrow(self)
+function GUISquadWaypoints:GetPathToSquad(fromHere)
+    -- TODO dont update when player is near path and target hasnt moved much
+    local targetLocation = Vector(0,0,0) -- TODO
+    local techPoints = EntityListToTable(Shared.GetEntitiesWithClassname("TechPoint"))
+    Shared.SortEntitiesByDistance(fromHere, techPoints)
+    targetLocation = techPoints[1]:GetOrigin()
+    local points = PointArray()
 
-    for a = 1, #self.arrows do
-
-        local arrow = self.arrows[a]
-        if not arrow.model:GetIsVisible() then
-
-            arrow.model:SetIsVisible(false)
-            arrow.light:SetIsVisible(false)
-            return arrow
-
-        end
-
+    local isReachable = Pathing.GetPathPoints(fromHere, targetLocation, points)
+    if isReachable then
+        return points
     end
-
-    local renderModel = Client.CreateRenderModel(RenderScene.Zone_Default)
-    renderModel:SetModel(self.arrowModelName)
-    renderModel:SetIsVisible(false)
-
-    local renderLight = Client.CreateRenderLight()
-    renderLight:SetType(RenderLight.Type_Point)
-    renderLight:SetCastsShadows(false)
-    renderLight:SetSpecular(false)
-    renderLight:SetRadius(1)
-    renderLight:SetIntensity(10)
-    renderLight:SetColor(self.lightColor)
-    renderLight:SetIsVisible(false)
-
-    local arrow = { model = renderModel, light = renderLight }
-    table.insert(self.arrows, arrow)
-
-    return arrow
-
+    -- NOTE InfantryPortal.lua:413  calls player:ProcessRallyOrder(self)
 end
 
 
-local function UpdateWorldArrows(self, dt)
-
-    for a = #self.worldArrows, 1, -1 do
-        local arrow = self.worldArrows[a]
-        if not arrow.inWorld then
-            table.remove(self.worldArrows, a)
-            arrow.hideAmount = 0
-            arrow.hideStartCoords = arrow.model:GetCoords()
-            table.insert(self.hideArrows, arrow)
-        else
-            if arrow.showAmount < 1 then
-                arrow.showAmount = math.min(1, arrow.showAmount + dt * kArrowScaleSpeed)
-                local scaledCoords = Coords(arrow.showStartCoords)
-                scaledCoords:Scale(arrow.showAmount)
-                arrow.model:SetCoords(scaledCoords)
-            end
+function GUISquadWaypoints:GetClosestPathPoint(toPoint)
+    local closestPointIndex = nil
+    local closestPoint = nil
+    local closestDistSquared = math.huge
+    for a = 1, #self.pathPoints do
+        local point = self.pathPoints[a]
+        local distSquared = (point - toPoint):GetLengthSquared()
+        if distSquared < closestDistSquared then
+            closestPointIndex = a
+            closestPoint = point
+            closestDistSquared = distSquared
         end
     end
+    return closestPointIndex, closestPoint, closestDistSquared
 end
 
 
-local function UpdateHideArrows(self, dt)
-
-    for a = #self.hideArrows, 1, -1 do
-
-        local arrow = self.hideArrows[a]
-        arrow.hideAmount = math.min(1, arrow.hideAmount + dt * kArrowScaleSpeed)
-
-        local scaledCoords = Coords(arrow.hideStartCoords)
-        scaledCoords:Scale(1 - arrow.hideAmount)
-        arrow.model:SetCoords(scaledCoords)
-
-        if arrow.hideAmount == 1 then
-            arrow.model:SetIsVisible(false)
-            arrow.light:SetIsVisible(false)
-            table.remove(self.hideArrows, a)
-        end
-    end
-end
-
-local function GetPathToSquad()
+function GUISquadWaypoints:UpdatePath()
+    Log("GUISquadWaypoints:UpdatePath")
+    self:DestroyLineSegments()
     local player = Client.GetLocalPlayer()
-    if player then
-        local playerOrigin = player:GetOrigin()
-        local targetLocation = Vector(0,0,0) -- TODO
-        local points = PointArray()
+    if not player then return end
+    local playerOrigin = player:GetOrigin()
+    local currentLocation = playerOrigin
+    if self.pathPoints then
+        local closestPointIndex, _, closestDistSquared = self:GetClosestPathPoint(playerOrigin)
+        if closestPointIndex and closestPointIndex > 1 and closestDistSquared < kMaxDistToPlayerSquared then
+            currentLocation = self.pathPoints[closestPointIndex-1] -- try to reuse old path
+        end
+    end
+    self.pathPoints = self:GetPathToSquad(currentLocation)
 
-        local isReachable = Pathing.GetPathPoints(playerOrigin, targetLocation, points)
-        if isReachable then
-            return points
+    if not self.pathPoints or #self.pathPoints < 2 then return end
+
+    local lastPoint = self.pathPoints[1]
+
+    for p = 2, #self.pathPoints do
+
+        local point = self.pathPoints[p]
+        local length = (lastPoint - point):GetLength()
+
+        -- Move the line a bit off the ground.
+        local lineStart = lastPoint + Vector(0, -0.85, 0)
+        local lineEnd = point + Vector(0, -0.85, 0) -- NOTE maybe trace down here
+
+        local line = self:CreateLineSegment(lineStart, lineEnd, length)
+        table.insert(self.lineSegments, line)
+
+        lastPoint = point
+    end
+
+end
+
+
+local function AddLine(self, line, dt)
+    if line.hasMesh then
+        if line.scale < 1 then
+            line.scale = math.min(1, line.scale + dt * kLineFadeInSpeed)
+            UpdateMesh(line)
+        end
+    else
+        line.mesh = Client.CreateRenderDynamicMesh(RenderScene.Zone_Default)
+        line.mesh:SetMaterial(self.lineMaterial)
+        line.mesh:SetIsVisible(true)
+        line.hasMesh = true
+        if self.pathUpdated then
+            line.scale = 1 -- prevents flickering
+            UpdateMesh(line)
+        end
+
+        line.light = Client.CreateRenderLight()
+        line.light:SetType(RenderLight.Type_Point)
+        line.light:SetCastsShadows(false)
+        line.light:SetSpecular(false)
+        line.light:SetRadius(1)
+        line.light:SetIntensity(2)
+        line.light:SetColor(self.lightColor)
+        line.light:SetCoords(Coords.GetTranslation(line.endPoint))
+        line.light:SetIsVisible(true)
+    end
+end
+
+
+local function RemoveLine(line, dt)
+    if line.hasMesh then
+        if line.scale > 0 then
+            line.scale = math.max(0, line.scale - dt * kLineFadeOutSpeed)
+            UpdateMesh(line)
+        else
+            line.mesh:SetIsVisible(false)
+            Client.DestroyRenderDynamicMesh(line.mesh)
+            line.hasMesh = false
+
+            line.light:SetIsVisible(false)
+            Client.DestroyRenderLight(line.light)
         end
     end
 end
 
-local function UpdatePath(self, dt)
 
-    PROFILE("UpdatePath")
-
-    -- Assume the arrows will be removed from the world.
-    for a = 1, #self.worldArrows do
-        self.worldArrows[a].inWorld = false
+function GUISquadWaypoints:UpdateLineSegements(deltaTime)
+    local playerOrigin = PlayerUI_GetOrigin()
+    local targetPoint = self.pathPoints[#self.pathPoints]
+    local nearestPathPointIndex, _, nearestPathPointDistanceSquared = self:GetClosestPathPoint(playerOrigin)
+    -- if we stray too far away from the path, request a new one
+    if nearestPathPointDistanceSquared > kMaxDistToPlayerSquared then
+        Log("kMaxDistToPlayerSquared request new path, %s > %s", nearestPathPointDistanceSquared, kMaxDistToPlayerSquared)
+        self.nextUpdatePathTime = 0
+        --return -- TODO ?
     end
 
-    self.lastGetOrderPathTime = self.lastGetOrderPathTime or 0
-    local now = Shared.GetTime()
-    if now - self.lastGetOrderPathTime >= 1 then
+    local totalDist = 0
+    for l = 1, #self.lineSegments do
+        local line = self.lineSegments[l]
 
-        self.lastGetOrderPathTime = now
-        self.pathPoints = GetPathToSquad()
-
-    end
-
-    local visible = self.pathPoints ~= nil and #self.pathPoints > 1
-    if visible then
-
-        local targetPoint = self.pathPoints[#self.pathPoints]
-        local lastPoint = PlayerUI_GetOrigin()
-        local arrowDist = 0
-        local totalDist = 0
-        for p = 1, #self.pathPoints do
-
-            local point = self.pathPoints[p]
-            local direction = lastPoint - point
-            local dist = direction:GetLength()
-            arrowDist = arrowDist + dist
-
-            -- Stop generating arrows when the path is big enough.
-            totalDist = totalDist + dist
-            if totalDist >= 30 then
-                break
+        -- we want to remove the lines behind us
+        if l < nearestPathPointIndex then
+            RemoveLine(line, deltaTime)
+        else
+            -- we want to see the lines ahead of us
+            totalDist = totalDist + line.length
+            if totalDist > kMaxPathLength then -- only add a part of the way
+                RemoveLine(line, deltaTime)
+            else
+                -- local distToPlayer = GetDistanceToLineInPlane(playerOrigin, line) -- TODO
+                -- if distToPlayer > kMinDistToPlayer and distToTarget > kMinDistToTargetSquared then
+                AddLine(self, line, deltaTime)
             end
-
-            if arrowDist >= 5 then
-
-                local trace = Shared.TraceRay(point, point - Vector(0, 100, 0), CollisionRep.Move, PhysicsMask.All)
-                if trace.fraction ~= 1 then
-
-                    -- Move the arrow a bit off the ground.
-                    local arrowOrigin = trace.endPoint + Vector(0, 0.2, 0)
-
-                    -- Find closest world arrow to this point.
-                    local arrow = FindClosestWorldArrow(self, arrowOrigin, PlayerUI_GetOrigin())
-
-                    -- If one cannot be found, create a new one.
-                    if not arrow then
-
-                        arrow = GetFreeArrow(self)
-                        table.insert(self.worldArrows, arrow)
-
-                        arrow.showAmount = 0
-                        local arrowCoords = Coords.GetLookIn(arrowOrigin, direction, Vector(0, 1, 0))
-                        arrow.showStartCoords = Coords(arrowCoords)
-                        arrowCoords:Scale(arrow.showAmount)
-                        arrow.model:SetCoords(arrowCoords)
-                        arrow.light:SetCoords(Coords.GetTranslation(arrowOrigin))
-
-                    end
-
-                    -- Do not allow arrows to be too close to the player or target.
-                    local distToPlayer = (PlayerUI_GetOrigin() - arrow.model:GetCoords().origin):GetLengthSquared()
-                    local distToTarget = (targetPoint - arrow.model:GetCoords().origin):GetLengthSquared()
-                    if distToPlayer > kArrowMinDistToPlayerSquared and distToTarget > kArrowMinDistToTargetSquared then
-
-                        arrow.inWorld = true
-                        arrow.model:SetIsVisible(true)
-                        arrow.light:SetIsVisible(true)
-
-                    end
-
-                    arrowDist = 0
-
-                end
-
-            end
-
-            lastPoint = point
-
         end
-
     end
+end
 
-    UpdateWorldArrows(self, dt)
-    UpdateHideArrows(self, dt)
 
+function GUISquadWaypoints:Update(deltaTime)
+    PROFILE("GUISquadWaypoints:Update")
+
+    GUIAnimatedScript.Update(self, deltaTime)
+
+    local now = Shared.GetTime()
+    if now > self.nextUpdatePathTime then
+        Log("kPathUpdateInterval exceeded")
+        self:UpdatePath()
+        self.pathUpdated = true
+        self.nextUpdatePathTime = now + kPathUpdateInterval
+    end
+    if self.pathPoints and now > self.lastUpdateLinesTime + kLineSegmentsUpdateInterval then
+        self:UpdateLineSegements(now - self.lastUpdateLinesTime)
+        self.pathUpdated = false
+        self.lastUpdateLinesTime = now
+    end
 end
 
 
 function GUISquadWaypoints:OnResolutionChanged(oldX, oldY, newX, newY)
-    Log("GUISquadWaypoints:OnResolutionChanged")
-    UpdateItemsGUIScale(self)
-
     self:Uninitialize()
     self:Initialize()
 
@@ -310,29 +287,6 @@ function GUISquadWaypoints:OnResolutionChanged(oldX, oldY, newX, newY)
 end
 
 
-local kPathUpdateInterval = kUpdateIntervalMedium
-function GUISquadWaypoints:Update(deltaTime)
-
-    PROFILE("GUISquadWaypoints:Update")
-
-    GUIAnimatedScript.Update(self, deltaTime)
-
-    local player = Client.GetLocalPlayer()
-    if player then
-        local playerOrigin = player:GetOrigin()
-        UpdateOrderLine(playerOrigin, Vector(0,0,0), self.line)
-    end
-
-
-
-    local now = Shared.GetTime()
-    if now > self.nextUpdatePathTime then
-        UpdatePath(self, deltaTime)
-        self.nextUpdatePathTime = now + kPathUpdateInterval
-    end
-    -- AnimateFinalWaypoint(self)
-
-end
 
 function GUISquadWaypoints:OnLocalPlayerChanged(newPlayer)
     if newPlayer:GetTeamNumber() == kTeam1Index then
@@ -341,5 +295,3 @@ function GUISquadWaypoints:OnLocalPlayerChanged(newPlayer)
         InitAlienTexture(self)
     end
 end
-
--- NOTE InfantryPortal.lua:413  calls player:ProcessRallyOrder(self)
