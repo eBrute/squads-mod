@@ -158,8 +158,8 @@ function GUISquadWaypoints:UpdatePath()
         local length = (lastPoint - point):GetLength()
 
         -- Move the line a bit off the ground.
-        local lineStart = lastPoint + Vector(0, -0.85, 0)
-        local lineEnd = point + Vector(0, -0.85, 0) -- NOTE maybe trace down here
+        local lineStart = lastPoint + Vector(0, -0.87, 0)
+        local lineEnd = point + Vector(0, -0.87, 0) -- NOTE maybe trace down here
 
         local line = self:CreateLineSegment(lineStart, lineEnd, length)
         table.insert(self.lineSegments, line)
