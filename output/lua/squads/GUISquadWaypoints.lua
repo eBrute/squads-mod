@@ -29,16 +29,12 @@ end
 
 local function InitMarineTexture(self)
     self.lineMaterial = GUISquadWaypoints.kMarineLineMaterialName
-    self.lightColor = Color(0.2, 0.2, 1, 1)
-    self.lightColor = Color(0.39, 0.29, 0.62, 1)
     self.marineWaypointLoaded = true
 end
 
 
 local function InitAlienTexture(self)
     self.lineMaterial = GUISquadWaypoints.kAlienLineMaterialName
-    self.lightColor = Color(1, 0.2, 0.2, 1)
-    self.lightColor = Color(0.39, 0.29, 0.62, 1)
     self.marineWaypointLoaded = false
 end
 
@@ -98,9 +94,6 @@ function GUISquadWaypoints:DestroyLineSegments()
         local line = self.lineSegments[a]
         if line.hasMesh then
             Client.DestroyRenderDynamicMesh(line.mesh)
-        end
-        if line.light then
-            Client.DestroyRenderLight(line.light)
         end
     end
     self.lineSegments = table.array(40)
@@ -192,16 +185,6 @@ local function AddLine(self, line, dt)
             line.scale = 1 -- prevents flickering
             UpdateMesh(line)
         end
-
-        line.light = Client.CreateRenderLight()
-        line.light:SetType(RenderLight.Type_Point)
-        line.light:SetCastsShadows(false)
-        line.light:SetSpecular(false)
-        line.light:SetRadius(1)
-        line.light:SetIntensity(2)
-        line.light:SetColor(self.lightColor)
-        line.light:SetCoords(Coords.GetTranslation(line.endPoint))
-        line.light:SetIsVisible(true)
     end
 end
 
@@ -215,9 +198,6 @@ local function RemoveLine(line, dt)
             line.mesh:SetIsVisible(false)
             Client.DestroyRenderDynamicMesh(line.mesh)
             line.hasMesh = false
-
-            line.light:SetIsVisible(false)
-            Client.DestroyRenderLight(line.light)
         end
     end
 end
