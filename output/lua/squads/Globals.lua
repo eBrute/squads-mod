@@ -3,7 +3,7 @@ kSquadTeams = {
 	[kTeam2Index] = true
 }
 
-kMaxSquadsMembersPerSquad = 8
+kMaxSquadsMembersPerSquad = 6
 
 kSquadType = enum {
 	[0] = "Invalid",
