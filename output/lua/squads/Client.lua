@@ -32,8 +32,21 @@ local function HideSquadSelectMenu()
     end
 end
 
+local function SetSquadSquareColors(squadNumber)
+    local c = kSquadColors[squadNumber]
+    Client.squadSquareColors = { c.r,c.g,c.b,c.a, c.r,c.g,c.b,c.a, c.r,c.g,c.b,c.a, c.r,c.g,c.b,c.a, }
+end
+
 local function OnSquadMemberJoinedSquad(message)
     if message.success then
+        local player = Client.GetLocalPlayer()
+        if player then
+            SetSquadSquareColors(message.squadNumber)
+            if HasMixin(player, "SquadMember") then
+                player:OnSquadNumberChange(message.squadNumber)
+            end
+        end
+
         if gSquadSelect then
             StartSoundEffect(GUISquadSelect.kSounds.click)
             HideSquadSelectMenu()

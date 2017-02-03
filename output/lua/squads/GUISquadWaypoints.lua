@@ -5,8 +5,8 @@ Script.Load("lua/GUIAnimatedScript.lua")
 
 class 'GUISquadWaypoints' (GUIAnimatedScript)
 
-GUISquadWaypoints.kMarineLineMaterialName = PrecacheAsset("ui/WaypointPath.material")
-GUISquadWaypoints.kAlienLineMaterialName = PrecacheAsset("ui/WaypointPath_alien.material")
+GUISquadWaypoints.kMarineLineMaterialName = PrecacheAsset("ui/squads/waypoint_path_marine.material")
+GUISquadWaypoints.kAlienLineMaterialName = PrecacheAsset("ui/squads/waypoint_path_alien.material")
 
 local kLineSegmentsUpdateInterval = kUpdateIntervalMedium
 local kPathUpdateInterval = 5
@@ -14,8 +14,8 @@ local kLineWidth = 0.44
 local kLineFadeInSpeed = 8
 local kLineFadeOutSpeed = 2
 local kMaxDistToPlayerSquared = 8 * 8
-local kMinDistToPlayer = 3
-local kMinDistToTarget = 1.5
+local kMinDistToPlayerSquared = 3 * 3
+local kMinDistToTargetSquared = 1.5 * 1.5
 local kMaxPathLength = 30
 
 function GUISquadWaypoints:Initialize()
@@ -24,17 +24,20 @@ function GUISquadWaypoints:Initialize()
     self.lastUpdateLinesTime = 0
     self.pathPoints = {}
     self.lineSegments = table.array(40)
+    self.colors = { 1,1,1,1, 1,1,1,1, 1,1,1,1, 1,1,1,1, }
 end
 
 
 local function InitMarineTexture(self)
     self.lineMaterial = GUISquadWaypoints.kMarineLineMaterialName
+    self.colors = { 0.725,0.921,0.949,1, 0.725,0.921,0.949,1, 0.725,0.921,0.949,1, 0.725,0.921,0.949,1, } -- kMarineColor
     self.marineWaypointLoaded = true
 end
 
 
 local function InitAlienTexture(self)
     self.lineMaterial = GUISquadWaypoints.kAlienLineMaterialName
+    self.colors = { 1,0.792, 0.227,1, 1,0.792, 0.227,1, 1,0.792, 0.227,1, 1,0.792, 0.227,1, } -- kAlienColor
     self.marineWaypointLoaded = false
 end
 
@@ -51,7 +54,6 @@ end
 
 local kSquareTexCoords = { 1,1, 0,1, 0,0, 1,0 }
 local kSquareIndices = { 3, 0, 1, 1, 2, 3 }
-local kSquareColors = { 1,1,1,1, 1,1,1,1, 1,1,1,1, 1,1,1,1, }
 local function UpdateMesh(line)
 
     local startPoint = line.startPoint
@@ -73,7 +75,7 @@ local function UpdateMesh(line)
     line.mesh:SetIndices(kSquareIndices, 6) -- #kSquareIndices
     line.mesh:SetTexCoords(kSquareTexCoords, 8) -- #kSquareTexCoords
     line.mesh:SetVertices(meshVertices, 12) -- #meshVertices
-    line.mesh:SetColors(kSquareColors, 16) -- #kSquareColors
+    line.mesh:SetColors(line.colors, 16) -- #kSquareColors
 
 end
 
@@ -85,6 +87,7 @@ function GUISquadWaypoints:CreateLineSegment(startPoint, endPoint, length, scale
     line.startPoint = startPoint
     line.endPoint = endPoint
     line.length = length or (startPoint - endPoint):GetLength()
+    line.colors = Client.squadSquareColors or self.colors
     return line
 end
 
@@ -134,10 +137,8 @@ end
 
 
 function GUISquadWaypoints:UpdatePath()
-    Log("GUISquadWaypoints:UpdatePath")
     self:DestroyLineSegments()
     local player = Client.GetLocalPlayer()
-    if not player then return end
     local playerOrigin = player:GetOrigin()
     local currentLocation = playerOrigin
     if self.pathPoints then
@@ -160,7 +161,6 @@ function GUISquadWaypoints:UpdatePath()
         -- Move the line a bit off the ground.
         local lineStart = lastPoint + Vector(0, -0.87, 0)
         local lineEnd = point + Vector(0, -0.87, 0) -- NOTE maybe trace down here
-
         local line = self:CreateLineSegment(lineStart, lineEnd, length)
         table.insert(self.lineSegments, line)
 
@@ -205,32 +205,36 @@ end
 
 function GUISquadWaypoints:UpdateLineSegements(deltaTime)
     local playerOrigin = PlayerUI_GetOrigin()
-    local targetPoint = self.pathPoints[#self.pathPoints]
-    local nearestPathPointIndex, _, nearestPathPointDistanceSquared = self:GetClosestPathPoint(playerOrigin)
+    if not playerOrigin then return end
+
     -- if we stray too far away from the path, request a new one
+    local nearestPathPointIndex, _, nearestPathPointDistanceSquared = self:GetClosestPathPoint(playerOrigin)
     if nearestPathPointDistanceSquared > kMaxDistToPlayerSquared then
-        Log("kMaxDistToPlayerSquared request new path, %s > %s", nearestPathPointDistanceSquared, kMaxDistToPlayerSquared)
-        self.nextUpdatePathTime = 0
-        --return -- TODO ?
+        -- Log("kMaxDistToPlayerSquared request new path, %s > %s", nearestPathPointDistanceSquared, kMaxDistToPlayerSquared)
+        local now = Shared.GetTime()
+        self.nextUpdatePathTime = now + kUpdateIntervalMedium
     end
 
-    local totalDist = 0
-    for l = 1, #self.lineSegments do
-        local line = self.lineSegments[l]
+    local targetPoint = self.pathPoints[#self.pathPoints]
+    local distToTargetSquared = (playerOrigin - targetPoint):GetLengthSquared()
 
-        -- we want to remove the lines behind us
-        if l < nearestPathPointIndex then
-            RemoveLine(line, deltaTime)
+    -- we want to remove the lines behind us
+    for l = 1, nearestPathPointIndex-1 do -- TODO pathpoint index vs linesegment index
+        local line = self.lineSegments[l]
+        RemoveLine(line, deltaTime)
+    end
+
+    -- we want to see the lines ahead of us
+    local totalDist = 0
+    for l = nearestPathPointIndex, #self.lineSegments do
+        local line = self.lineSegments[l]
+        totalDist = totalDist + line.length
+        if totalDist < kMaxPathLength  -- only add a part of the way
+        and distToTargetSquared > kMinDistToTargetSquared -- dont show path if target is close
+        then
+            AddLine(self, line, deltaTime)  -- TODO decrease width with distance?
         else
-            -- we want to see the lines ahead of us
-            totalDist = totalDist + line.length
-            if totalDist > kMaxPathLength then -- only add a part of the way
-                RemoveLine(line, deltaTime)
-            else
-                -- local distToPlayer = GetDistanceToLineInPlane(playerOrigin, line) -- TODO
-                -- if distToPlayer > kMinDistToPlayer and distToTarget > kMinDistToTargetSquared then
-                AddLine(self, line, deltaTime)
-            end
+            RemoveLine(line, deltaTime)
         end
     end
 end
@@ -243,12 +247,17 @@ function GUISquadWaypoints:Update(deltaTime)
 
     local now = Shared.GetTime()
     if now > self.nextUpdatePathTime then
-        Log("kPathUpdateInterval exceeded")
+        -- Log("kPathUpdateInterval exceeded")
+        local player = Client.GetLocalPlayer()
+        if not player then
+            self.pathPoints = {}
+            return
+        end
         self:UpdatePath()
         self.pathUpdated = true
         self.nextUpdatePathTime = now + kPathUpdateInterval
     end
-    if self.pathPoints and now > self.lastUpdateLinesTime + kLineSegmentsUpdateInterval then
+    if self.pathPoints and #self.pathPoints > 1 and now > self.lastUpdateLinesTime + kLineSegmentsUpdateInterval then
         self:UpdateLineSegements(now - self.lastUpdateLinesTime)
         self.pathUpdated = false
         self.lastUpdateLinesTime = now

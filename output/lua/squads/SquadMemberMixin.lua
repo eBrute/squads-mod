@@ -16,19 +16,17 @@ function SquadMemberMixin:__initmixin()
     if Server then
         self.squadNumber = kSquadType.Invalid
     end
-    if Client then
-        self:AddFieldWatcher("squadNumber", SquadMemberMixin.OnSquadNumberChange)
-    end
 end
 
 
 if Client then
-    function SquadMemberMixin:OnSquadNumberChange()
+    function SquadMemberMixin:OnSquadNumberChange(newSquadNumber)
+        Log(" SquadMemberMixin:OnSquadNumberChange() to squad %s (self: %s) in %s", newSquadNumber, self.squadNumber, self)
     end
 end
 
 
--- NOTE does not notify squad, use SwitchToSquad() instead
+-- NOTE does not notify squad, use SwitchToSquad() instead, called on the server only
 function SquadMemberMixin:SetSquadNumber(squadNumber)
     self.squadNumber = squadNumber
 end
@@ -79,7 +77,7 @@ if Server then
                 oldSquad:AddPlayer(self)
             end
         else
-            Server.SendNetworkMessage(self:GetClient(), "SquadMemberJoinedTeam", {oldTeam = oldPlayer:GetTeamNumber(), newTeam = self:GetTeamNumber()}, true)
+            Server.SendNetworkMessage(self:GetClient(), "SquadMemberJoinedTeam", {newTeam = self:GetTeamNumber()}, true)
         end
     end
 end

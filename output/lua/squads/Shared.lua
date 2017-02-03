@@ -14,6 +14,6 @@ local function OnDumpSquads()
 end
 Event.Hook("Console_dump_squads", OnDumpSquads)
 
-Shared.RegisterNetworkMessage("SquadMemberJoinedTeam", {oldteam = "integer (" .. kTeamInvalid .. " to " .. kSpectatorIndex .. ")", newTeam = "integer (" .. kTeamInvalid .. " to " .. kSpectatorIndex .. ")"})
-Shared.RegisterNetworkMessage("SquadMemberJoinedSquad", { success = "boolean" })
+Shared.RegisterNetworkMessage("SquadMemberJoinedTeam", {newTeam = "integer (" .. kTeamInvalid .. " to " .. kSpectatorIndex .. ")"})
+Shared.RegisterNetworkMessage("SquadMemberJoinedSquad", { squadNumber = "enum kSquadType", success = "boolean" })
 Shared.RegisterNetworkMessage("SelectSquad", { squadNumber = "enum kSquadType" })
