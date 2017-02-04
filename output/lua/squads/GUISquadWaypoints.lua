@@ -12,9 +12,8 @@ local kLineSegmentsUpdateInterval = kUpdateIntervalMedium
 local kPathUpdateInterval = 5
 local kLineWidth = 0.44
 local kLineFadeInSpeed = 8
-local kLineFadeOutSpeed = 2
+local kLineFadeOutSpeed = 1
 local kMaxDistToPlayerSquared = 8 * 8
-local kMinDistToPlayerSquared = 3 * 3
 local kMinDistToTargetSquared = 1.5 * 1.5
 local kMaxPathLength = 30
 
@@ -24,20 +23,20 @@ function GUISquadWaypoints:Initialize()
     self.lastUpdateLinesTime = 0
     self.pathPoints = {}
     self.lineSegments = table.array(40)
-    self.colors = { 1,1,1,1, 1,1,1,1, 1,1,1,1, 1,1,1,1, }
+    self.colors = { 1,1,1,1, 1,1,1,1, 1,1,1,1, 1,1,1,1, 1,1,1,1 }
 end
 
 
 local function InitMarineTexture(self)
     self.lineMaterial = GUISquadWaypoints.kMarineLineMaterialName
-    self.colors = { 0.725,0.921,0.949,1, 0.725,0.921,0.949,1, 0.725,0.921,0.949,1, 0.725,0.921,0.949,1, } -- kMarineColor
+    self.colors = { 0.725,0.921,0.949,1, 0.725,0.921,0.949,1, 0.725,0.921,0.949,1, 0.725,0.921,0.949,1, 0.725,0.921,0.949,1, } -- kMarineColor
     self.marineWaypointLoaded = true
 end
 
 
 local function InitAlienTexture(self)
     self.lineMaterial = GUISquadWaypoints.kAlienLineMaterialName
-    self.colors = { 1,0.792, 0.227,1, 1,0.792, 0.227,1, 1,0.792, 0.227,1, 1,0.792, 0.227,1, } -- kAlienColor
+    self.colors = { 1,0.792,0.227,1, 1,0.792,0.227,1, 1,0.792,0.227,1, 1,0.792,0.227,1, 1,0.792,0.227,1, } -- kAlienColor
     self.marineWaypointLoaded = false
 end
 
@@ -52,10 +51,8 @@ function GUISquadWaypoints:Uninitialize()
 end
 
 
--- local kSquareTexCoords = { 1,1, 0,1, 0,0, 1,0 }
--- local kSquareTexCoords = { 1,1, 1,0, 0,0, 0,1 }
-local kSquareTexCoords = { 1,1, 0,1, 0,0, 1,0 }
-local kSquareIndices = { 3, 0, 1, 1, 2, 3 }
+local kSquareIndices = { 0,1,4, 1,2,3, 3,4,1 }
+local kSquareTexCoords = { 1,1, 0.5,1, 0,1, 0,0, 1,0 }
 local function UpdateMesh(line)
 
     local startPoint = line.startPoint
@@ -65,18 +62,21 @@ local function UpdateMesh(line)
     local sideVector = pathVector:CrossProduct(Vector(0, 1, 0))
     sideVector:Normalize()
     sideVector:Scale(kLineWidth * line.scale)
+    local startSideVector = sideVector * (line.startWidthMultiplier or 1)
+    local endSideVector = sideVector * (line.endWidthMultiplier or 1)
 
     local meshVertices = {
-          endPoint.x + sideVector.x,   endPoint.y,   endPoint.z + sideVector.z,
-          endPoint.x - sideVector.x,   endPoint.y,   endPoint.z - sideVector.z,
-        startPoint.x - sideVector.x, startPoint.y, startPoint.z - sideVector.z,
-        startPoint.x + sideVector.x, startPoint.y, startPoint.z + sideVector.z,
+          endPoint.x + endSideVector.x,   endPoint.y,   endPoint.z + endSideVector.z,
+          endPoint.x,                     endPoint.y,   endPoint.z,
+          endPoint.x - endSideVector.x,   endPoint.y,   endPoint.z - endSideVector.z,
+        startPoint.x - startSideVector.x, startPoint.y, startPoint.z - startSideVector.z,
+        startPoint.x + startSideVector.x, startPoint.y, startPoint.z + startSideVector.z,
     }
 
-    line.mesh:SetIndices(kSquareIndices, 6) -- #kSquareIndices
-    line.mesh:SetTexCoords(kSquareTexCoords, 8) -- #kSquareTexCoords
-    line.mesh:SetVertices(meshVertices, 12) -- #meshVertices
-    line.mesh:SetColors(line.colors, 16) -- #kSquareColors
+    line.mesh:SetIndices(kSquareIndices, 9) -- #kSquareIndices
+    line.mesh:SetTexCoords(kSquareTexCoords, 10) -- #kSquareTexCoords
+    line.mesh:SetVertices(meshVertices, 15) -- #meshVertices
+    line.mesh:SetColors(line.colors or kSquareColors, 20) -- #line.colors
 
 end
 
@@ -178,23 +178,25 @@ local function AddLine(self, line, pathDistFromPlayer, pathDistFromStart, time, 
         line.mesh:SetMaterial(self.lineMaterial)
         line.mesh:SetIsVisible(true)
         line.hasMesh = true
-        -- if self.pathUpdated then
-        --     line.scale = 1 -- prevents flickering
-        --     UpdateMesh(line)
-        -- end
-    -- else
-            -- if line.scale < 1 then
-            -- line.scale = math.min(1, line.scale + dt * kLineFadeInSpeed)
-            -- UpdateMesh(line)
-            -- end
+        if self.pathUpdated then
+            line.scale = 1 -- prevents flickering
+            UpdateMesh(line)
+        end
     end
 
-    local freq = 1
-    local wavelength = 0.25
-    local wave = math.sin( ((pathDistFromStart + line.length /2 ) * wavelength - time * freq) * math.pi)
-    local wavePositive = Clamp(wave, 0, 1)
-    local waveSpaced = Clamp(wave, 0.5, 1)
-    line.scale = wavePositive * waveSpaced * 2 + 1
+    if line.scale < 1 then
+        line.scale = math.min(1, line.scale + dt * kLineFadeInSpeed)
+        UpdateMesh(line)
+    end
+
+    local freq = 1.5
+    local invwavelength = 0.2
+    local startWave = math.sin( (pathDistFromStart * invwavelength - time * freq) * math.pi)
+    local endWave = math.sin( ((pathDistFromStart + line.length ) * invwavelength - time * freq) * math.pi)
+
+    line.startWidthMultiplier = (Clamp(startWave, 0.7, 1) - 0.5) * 5 -- 1 <= value <= 2.5
+    line.endWidthMultiplier = (Clamp(endWave, 0.7, 1) - 0.5) * 5 -- 1 <= value <= 2.5
+    -- line.scale = 1
     UpdateMesh(line)
 
 end
@@ -204,6 +206,8 @@ end
 local function RemoveLine(line, dt)
     if line.hasMesh then
         if line.scale > 0 then
+            line.startWidthMultiplier = nil
+            line.endWidthMultiplier = nil
             line.scale = math.max(0, line.scale - dt * kLineFadeOutSpeed)
             UpdateMesh(line)
         else
@@ -223,7 +227,6 @@ function GUISquadWaypoints:UpdateLineSegements(deltaTime)
     -- if we stray too far away from the path, request a new one
     local nearestPathPointIndex, _, nearestPathPointDistanceSquared = self:GetClosestPathPoint(playerOrigin)
     if nearestPathPointDistanceSquared > kMaxDistToPlayerSquared then
-        -- Log("kMaxDistToPlayerSquared request new path, %s > %s", nearestPathPointDistanceSquared, kMaxDistToPlayerSquared)
         self.nextUpdatePathTime = now + kUpdateIntervalMedium
     end
 
@@ -244,6 +247,7 @@ function GUISquadWaypoints:UpdateLineSegements(deltaTime)
         local line = self.lineSegments[l]
         if pathDistFromPlayer < kMaxPathLength  -- only add a part of the way
         and distToTargetSquared > kMinDistToTargetSquared -- dont show path if target is close
+        -- and l == nearestPathPointIndex
         then
             AddLine(self, line, pathDistFromPlayer, pathDistFromStart, now, deltaTime)  -- TODO decrease width with distance?
         else

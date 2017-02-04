@@ -34,7 +34,7 @@ end
 
 local function SetSquadSquareColors(squadNumber)
     local c = kSquadColors[squadNumber]
-    Client.squadSquareColors = { c.r,c.g,c.b,c.a, c.r,c.g,c.b,c.a, c.r,c.g,c.b,c.a, c.r,c.g,c.b,c.a, }
+    Client.squadSquareColors = { c.r,c.g,c.b,c.a, c.r,c.g,c.b,c.a, c.r,c.g,c.b,c.a, c.r,c.g,c.b,c.a, c.r,c.g,c.b,c.a, }
 end
 
 local function OnSquadMemberJoinedSquad(message)
