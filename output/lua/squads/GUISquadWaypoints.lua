@@ -52,6 +52,8 @@ function GUISquadWaypoints:Uninitialize()
 end
 
 
+-- local kSquareTexCoords = { 1,1, 0,1, 0,0, 1,0 }
+-- local kSquareTexCoords = { 1,1, 1,0, 0,0, 0,1 }
 local kSquareTexCoords = { 1,1, 0,1, 0,0, 1,0 }
 local kSquareIndices = { 3, 0, 1, 1, 2, 3 }
 local function UpdateMesh(line)
@@ -61,13 +63,12 @@ local function UpdateMesh(line)
     local pathVector = endPoint - startPoint
     pathVector.y = 0
     local sideVector = pathVector:CrossProduct(Vector(0, 1, 0))
-
     sideVector:Normalize()
     sideVector:Scale(kLineWidth * line.scale)
 
     local meshVertices = {
-        endPoint.x + sideVector.x, endPoint.y, endPoint.z + sideVector.z,
-        endPoint.x - sideVector.x, endPoint.y, endPoint.z - sideVector.z,
+          endPoint.x + sideVector.x,   endPoint.y,   endPoint.z + sideVector.z,
+          endPoint.x - sideVector.x,   endPoint.y,   endPoint.z - sideVector.z,
         startPoint.x - sideVector.x, startPoint.y, startPoint.z - sideVector.z,
         startPoint.x + sideVector.x, startPoint.y, startPoint.z + sideVector.z,
     }
@@ -170,25 +171,36 @@ function GUISquadWaypoints:UpdatePath()
 end
 
 
-local function AddLine(self, line, dt)
-    if line.hasMesh then
-        if line.scale < 1 then
-            line.scale = math.min(1, line.scale + dt * kLineFadeInSpeed)
-            UpdateMesh(line)
-        end
-    else
+-- ads line if not exist, updates the line if it exists
+local function AddLine(self, line, pathDistFromPlayer, pathDistFromStart, time, dt)
+    if not line.hasMesh then
         line.mesh = Client.CreateRenderDynamicMesh(RenderScene.Zone_Default)
         line.mesh:SetMaterial(self.lineMaterial)
         line.mesh:SetIsVisible(true)
         line.hasMesh = true
-        if self.pathUpdated then
-            line.scale = 1 -- prevents flickering
-            UpdateMesh(line)
-        end
+        -- if self.pathUpdated then
+        --     line.scale = 1 -- prevents flickering
+        --     UpdateMesh(line)
+        -- end
+    -- else
+            -- if line.scale < 1 then
+            -- line.scale = math.min(1, line.scale + dt * kLineFadeInSpeed)
+            -- UpdateMesh(line)
+            -- end
     end
+
+    local freq = 1
+    local wavelength = 0.25
+    local wave = math.sin( ((pathDistFromStart + line.length /2 ) * wavelength - time * freq) * math.pi)
+    local wavePositive = Clamp(wave, 0, 1)
+    local waveSpaced = Clamp(wave, 0.5, 1)
+    line.scale = wavePositive * waveSpaced * 2 + 1
+    UpdateMesh(line)
+
 end
 
 
+-- updates lines marked from removal, destroys lines when the animation is done
 local function RemoveLine(line, dt)
     if line.hasMesh then
         if line.scale > 0 then
@@ -206,36 +218,39 @@ end
 function GUISquadWaypoints:UpdateLineSegements(deltaTime)
     local playerOrigin = PlayerUI_GetOrigin()
     if not playerOrigin then return end
+    local now = Shared.GetTime()
 
     -- if we stray too far away from the path, request a new one
     local nearestPathPointIndex, _, nearestPathPointDistanceSquared = self:GetClosestPathPoint(playerOrigin)
     if nearestPathPointDistanceSquared > kMaxDistToPlayerSquared then
         -- Log("kMaxDistToPlayerSquared request new path, %s > %s", nearestPathPointDistanceSquared, kMaxDistToPlayerSquared)
-        local now = Shared.GetTime()
         self.nextUpdatePathTime = now + kUpdateIntervalMedium
     end
 
     local targetPoint = self.pathPoints[#self.pathPoints]
     local distToTargetSquared = (playerOrigin - targetPoint):GetLengthSquared()
+    local pathDistFromStart = 0
+    local pathDistFromPlayer = 0
 
     -- we want to remove the lines behind us
     for l = 1, nearestPathPointIndex-1 do -- TODO pathpoint index vs linesegment index
         local line = self.lineSegments[l]
         RemoveLine(line, deltaTime)
+        pathDistFromStart = pathDistFromStart + line.length
     end
 
     -- we want to see the lines ahead of us
-    local totalDist = 0
     for l = nearestPathPointIndex, #self.lineSegments do
         local line = self.lineSegments[l]
-        totalDist = totalDist + line.length
-        if totalDist < kMaxPathLength  -- only add a part of the way
+        if pathDistFromPlayer < kMaxPathLength  -- only add a part of the way
         and distToTargetSquared > kMinDistToTargetSquared -- dont show path if target is close
         then
-            AddLine(self, line, deltaTime)  -- TODO decrease width with distance?
+            AddLine(self, line, pathDistFromPlayer, pathDistFromStart, now, deltaTime)  -- TODO decrease width with distance?
         else
             RemoveLine(line, deltaTime)
         end
+        pathDistFromPlayer = pathDistFromPlayer + line.length
+        pathDistFromStart = pathDistFromStart + line.length
     end
 end
 
