@@ -51,40 +51,11 @@ function GUISquadWaypoints:Uninitialize()
 end
 
 
-local kSquareIndices = { 0,1,4, 1,2,3, 3,4,1 }
-local kSquareTexCoords = { 1,1, 0.5,1, 0,1, 0,0, 1,0 }
-local function UpdateMesh(line)
-
-    local startPoint = line.startPoint
-    local endPoint = line.endPoint
-    local pathVector = endPoint - startPoint
-    pathVector.y = 0
-    local sideVector = pathVector:CrossProduct(Vector(0, 1, 0))
-    sideVector:Normalize()
-    sideVector:Scale(kLineWidth * line.scale)
-    local startSideVector = sideVector * (line.startWidthMultiplier or 1)
-    local endSideVector = sideVector * (line.endWidthMultiplier or 1)
-
-    local meshVertices = {
-          endPoint.x + endSideVector.x,   endPoint.y,   endPoint.z + endSideVector.z,
-          endPoint.x,                     endPoint.y,   endPoint.z,
-          endPoint.x - endSideVector.x,   endPoint.y,   endPoint.z - endSideVector.z,
-        startPoint.x - startSideVector.x, startPoint.y, startPoint.z - startSideVector.z,
-        startPoint.x + startSideVector.x, startPoint.y, startPoint.z + startSideVector.z,
-    }
-
-    line.mesh:SetIndices(kSquareIndices, 9) -- #kSquareIndices
-    line.mesh:SetTexCoords(kSquareTexCoords, 10) -- #kSquareTexCoords
-    line.mesh:SetVertices(meshVertices, 15) -- #meshVertices
-    line.mesh:SetColors(line.colors or kSquareColors, 20) -- #line.colors
-
-end
-
-
-function GUISquadWaypoints:CreateLineSegment(startPoint, endPoint, length, scale)
+function GUISquadWaypoints:CreateLineSegment(startPoint, endPoint, length)
     local line = {}
     line.hasMesh = false
-    line.scale = scale or 0
+    line.startWidthMultiplier = 0
+    line.endWidthMultiplier = 0
     line.startPoint = startPoint
     line.endPoint = endPoint
     line.length = length or (startPoint - endPoint):GetLength()
@@ -106,17 +77,27 @@ end
 
 function GUISquadWaypoints:GetPathToSquad(fromHere)
     -- TODO dont update when player is near path and target hasnt moved much
-    local targetLocation = Vector(0,0,0) -- TODO
-    local techPoints = EntityListToTable(Shared.GetEntitiesWithClassname("TechPoint"))
-    Shared.SortEntitiesByDistance(fromHere, techPoints)
-    targetLocation = techPoints[1]:GetOrigin()
-    local points = PointArray()
 
-    local isReachable = Pathing.GetPathPoints(fromHere, targetLocation, points)
-    if isReachable then
-        return points
+    -- dont show waypoints for commanders or unassigned squad
+    local player = Client.GetLocalPlayer()
+    if player
+        and HasMixin(player, "SquadMember")
+        and not player:isa("Commander")
+        and player:GetSquadNumber() > kSquadType.Unassigned
+    then
+        local targetLocation, targetLocationId = player:GetSquadRallyPoint()
+
+        -- dont show waypoints if we dont have a target location
+        -- or if we are in same room already
+        if not targetLocationId or targetLocationId == -1 then return end
+        if targetLocationId == player.locationId then return end
+
+        local points = PointArray()
+        local isReachable = Pathing.GetPathPoints(fromHere, targetLocation, points)
+        if isReachable then
+            return points
+        end
     end
-    -- NOTE InfantryPortal.lua:413  calls player:ProcessRallyOrder(self)
 end
 
 
@@ -171,6 +152,36 @@ function GUISquadWaypoints:UpdatePath()
 end
 
 
+local kSquareIndices = { 0,1,4, 1,2,3, 3,4,1 }
+local kSquareTexCoords = { 1,1, 0.5,1, 0,1, 0,0, 1,0 }
+local function UpdateMesh(line)
+
+    local startPoint = line.startPoint
+    local endPoint = line.endPoint
+    local pathVector = endPoint - startPoint
+    pathVector.y = 0
+    local sideVector = pathVector:CrossProduct(Vector(0, 1, 0))
+    sideVector:Normalize()
+    sideVector:Scale(kLineWidth)
+    local startSideVector = sideVector * (line.startWidthMultiplier or 1)
+    local endSideVector = sideVector * (line.endWidthMultiplier or 1)
+
+    local meshVertices = {
+          endPoint.x + endSideVector.x,   endPoint.y,   endPoint.z + endSideVector.z,
+          endPoint.x,                     endPoint.y,   endPoint.z,
+          endPoint.x - endSideVector.x,   endPoint.y,   endPoint.z - endSideVector.z,
+        startPoint.x - startSideVector.x, startPoint.y, startPoint.z - startSideVector.z,
+        startPoint.x + startSideVector.x, startPoint.y, startPoint.z + startSideVector.z,
+    }
+
+    line.mesh:SetIndices(kSquareIndices, 9) -- #kSquareIndices
+    line.mesh:SetTexCoords(kSquareTexCoords, 10) -- #kSquareTexCoords
+    line.mesh:SetVertices(meshVertices, 15) -- #meshVertices
+    line.mesh:SetColors(line.colors or kSquareColors, 20) -- #line.colors
+
+end
+
+
 -- ads line if not exist, updates the line if it exists
 local function AddLine(self, line, pathDistFromPlayer, pathDistFromStart, time, dt)
     if not line.hasMesh then
@@ -178,15 +189,6 @@ local function AddLine(self, line, pathDistFromPlayer, pathDistFromStart, time, 
         line.mesh:SetMaterial(self.lineMaterial)
         line.mesh:SetIsVisible(true)
         line.hasMesh = true
-        if self.pathUpdated then
-            line.scale = 1 -- prevents flickering
-            UpdateMesh(line)
-        end
-    end
-
-    if line.scale < 1 then
-        line.scale = math.min(1, line.scale + dt * kLineFadeInSpeed)
-        UpdateMesh(line)
     end
 
     local freq = 1.5
@@ -194,9 +196,15 @@ local function AddLine(self, line, pathDistFromPlayer, pathDistFromStart, time, 
     local startWave = math.sin( (pathDistFromStart * invwavelength - time * freq) * math.pi)
     local endWave = math.sin( ((pathDistFromStart + line.length ) * invwavelength - time * freq) * math.pi)
 
-    line.startWidthMultiplier = (Clamp(startWave, 0.7, 1) - 0.5) * 5 -- 1 <= value <= 2.5
     line.endWidthMultiplier = (Clamp(endWave, 0.7, 1) - 0.5) * 5 -- 1 <= value <= 2.5
-    -- line.scale = 1
+
+    if pathDistFromPlayer == 0 then
+        -- reduce first segment to triangle
+        line.startWidthMultiplier = math.max(0, line.startWidthMultiplier - dt * kLineFadeOutSpeed)
+    else
+        line.startWidthMultiplier = (Clamp(startWave, 0.7, 1) - 0.5) * 5 -- 1 <= value <= 2.5
+    end
+
     UpdateMesh(line)
 
 end
@@ -205,10 +213,9 @@ end
 -- updates lines marked from removal, destroys lines when the animation is done
 local function RemoveLine(line, dt)
     if line.hasMesh then
-        if line.scale > 0 then
-            line.startWidthMultiplier = nil
-            line.endWidthMultiplier = nil
-            line.scale = math.max(0, line.scale - dt * kLineFadeOutSpeed)
+        if line.startWidthMultiplier > 0 or line.endWidthMultiplier > 0 then
+            line.startWidthMultiplier = math.max(0, math.min(1, line.startWidthMultiplier) - dt * kLineFadeOutSpeed)
+            line.endWidthMultiplier = math.max(0, math.min(1, line.endWidthMultiplier) - dt * kLineFadeOutSpeed)
             UpdateMesh(line)
         else
             line.mesh:SetIsVisible(false)

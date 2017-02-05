@@ -8,13 +8,17 @@ SquadMemberMixin = CreateMixin(SquadMemberMixin)
 SquadMemberMixin.type = "SquadMember"
 
 SquadMemberMixin.networkVars = {
-    squadNumber = "enum kSquadType"
+    squadNumber = "enum kSquadType",
+    squadRallyPoint = "vector",
+    squadRallyPointLocationId = "integer (-1 to 30)",
 }
 
 
 function SquadMemberMixin:__initmixin()
     if Server then
         self.squadNumber = kSquadType.Invalid
+        self.squadRallyPoint = Vector(0,0,0)
+        self.squadRallyPointLocationId = -1
     end
 end
 
@@ -55,6 +59,19 @@ function SquadMemberMixin:SwitchToSquad(squadNumber)
         end
         return success
     end
+end
+
+
+function SquadMemberMixin:SetSquadRallyPoint(rallyPoint, locationId)
+    Log("SquadMemberMixin:SetSquadRallyPoint %s > %s %s", self, rallyPoint, locationId)
+    self.squadRallyPoint = rallyPoint or Vector(0,0,0)
+    self.squadRallyPointLocationId = locationId or -1
+end
+
+
+function SquadMemberMixin:GetSquadRallyPoint()
+    Log("SquadMemberMixin:GetSquadRallyPoint: %s > current squad target: %s %s", self, targetLocation, targetLocationId)
+    return self.squadRallyPoint, self.squadRallyPointLocationId
 end
 
 

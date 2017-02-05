@@ -71,6 +71,12 @@ function SquadTeamMixin:ResetSquads()
 end
 
 
+function SquadTeamMixin:Update(deltaTime)
+    for squadNumber = 1, #kSquadType do
+        self.squads[squadNumber]:OnUpdate(deltaTime)
+    end
+end
+
 function SquadTeamMixin:DumpSquads()
     for squadNumber = 1, #kSquadType do
 		self.squads[squadNumber]:Dump()
