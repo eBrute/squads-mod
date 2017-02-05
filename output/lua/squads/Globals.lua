@@ -47,7 +47,7 @@ kSquadColors = { -- used for menu squad title and scoreboard
 	Color(0.22, 0.40, 0.69, 1), -- blue
 	Color(0.99, 0.84, 0.05, 1), -- yellow
 	Color(0.39, 0.29, 0.62, 1), -- purple
-	Color(0.97, 0.72, 0.82, 1), -- pink
+	Color(0.96, 0.59, 0.74, 1), -- pink
 }
 
 kSquadMenuPlayerColors = {
