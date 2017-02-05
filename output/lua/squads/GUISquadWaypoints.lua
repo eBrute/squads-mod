@@ -76,8 +76,6 @@ end
 
 
 function GUISquadWaypoints:GetPathToSquad(fromHere)
-    -- TODO dont update when player is near path and target hasnt moved much
-
     -- dont show waypoints for commanders or unassigned squad
     local player = Client.GetLocalPlayer()
     if player
@@ -88,8 +86,8 @@ function GUISquadWaypoints:GetPathToSquad(fromHere)
         local targetLocation, targetLocationId = player:GetSquadRallyPoint()
 
         -- dont show waypoints if we dont have a target location
-        -- or if we are in same room already
         if not targetLocationId or targetLocationId == -1 then return end
+        -- or if we are in same room already
         if targetLocationId == player.locationId then return end
 
         local points = PointArray()
@@ -183,6 +181,7 @@ end
 
 
 -- ads line if not exist, updates the line if it exists
+-- TODO decrease width with distance?
 local function AddLine(self, line, pathDistFromPlayer, pathDistFromStart, time, dt)
     if not line.hasMesh then
         line.mesh = Client.CreateRenderDynamicMesh(RenderScene.Zone_Default)
@@ -243,7 +242,7 @@ function GUISquadWaypoints:UpdateLineSegements(deltaTime)
     local pathDistFromPlayer = 0
 
     -- we want to remove the lines behind us
-    for l = 1, nearestPathPointIndex-1 do -- TODO pathpoint index vs linesegment index
+    for l = 1, nearestPathPointIndex-1 do -- NOTE line l = line between point l-1 and l
         local line = self.lineSegments[l]
         RemoveLine(line, deltaTime)
         pathDistFromStart = pathDistFromStart + line.length
@@ -254,9 +253,8 @@ function GUISquadWaypoints:UpdateLineSegements(deltaTime)
         local line = self.lineSegments[l]
         if pathDistFromPlayer < kMaxPathLength  -- only add a part of the way
         and distToTargetSquared > kMinDistToTargetSquared -- dont show path if target is close
-        -- and l == nearestPathPointIndex
         then
-            AddLine(self, line, pathDistFromPlayer, pathDistFromStart, now, deltaTime)  -- TODO decrease width with distance?
+            AddLine(self, line, pathDistFromPlayer, pathDistFromStart, now, deltaTime)
         else
             RemoveLine(line, deltaTime)
         end
@@ -273,12 +271,12 @@ function GUISquadWaypoints:Update(deltaTime)
 
     local now = Shared.GetTime()
     if now > self.nextUpdatePathTime then
-        -- Log("kPathUpdateInterval exceeded")
         local player = Client.GetLocalPlayer()
         if not player then
             self.pathPoints = {}
             return
         end
+        -- TODO dont update when target hasnt moved much
         self:UpdatePath()
         self.pathUpdated = true
         self.nextUpdatePathTime = now + kPathUpdateInterval
@@ -300,7 +298,6 @@ function GUISquadWaypoints:OnResolutionChanged(oldX, oldY, newX, newY)
         self:OnLocalPlayerChanged(player)
     end
 end
-
 
 
 function GUISquadWaypoints:OnLocalPlayerChanged(newPlayer)
