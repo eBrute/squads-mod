@@ -49,7 +49,7 @@ if Client then
             -- NOTE begin squad code
             local isInSquad = HasMixin(self, "SquadMember") and not self:isa("MarineCommander") and self:GetSquadNumber() > kSquadType.Unassigned
             local isInSameSquad = isInSquad and GetAreFriends(self, player) and self:GetSquadNumber() == player:GetSquadNumber()
-            local hasSquadOutline = isInSameSquad or (isInSquad and player:isa("MarineCommander"))
+            local hasSquadOutline = isInSameSquad or (isInSquad and (player:isa("MarineCommander") or Client.GetLocalClientTeamNumber() == kSpectatorIndex))
             local outlineModel = Client.GetOutlinePlayers() and
                                     ( ( Client.GetLocalClientTeamNumber() == kSpectatorIndex ) or
                                       ( player:isa("MarineCommander") and self.catpackboost )  or

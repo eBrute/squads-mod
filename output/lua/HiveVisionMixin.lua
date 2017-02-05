@@ -111,7 +111,7 @@ if Client then
         -- NOTE begin squad code
         local isInSquad = HasMixin(self, "SquadMember") and not self:isa("AlienCommander") and self:GetSquadNumber() > kSquadType.Unassigned
         local isInSameSquad = isInSquad and GetAreFriends(self, player) and self:GetSquadNumber() == player:GetSquadNumber()
-        local hasSquadOutline = (isInSameSquad and (player:isa("Alien") or player:isa("AlienSpectator"))) or (isInSquad and player:isa("AlienCommander"))
+        local hasSquadOutline = (isInSameSquad and (player:isa("Alien") or player:isa("AlienSpectator"))) or (isInSquad and (player:isa("AlienCommander") or Client.GetLocalClientTeamNumber() == kSpectatorIndex))
 
         local outlineColor
         if visible then
