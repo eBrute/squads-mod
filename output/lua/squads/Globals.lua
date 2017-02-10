@@ -33,12 +33,12 @@ kSquadNames = {
 kSquadMenuBackgroundTextures = {
 	[0] = nil, -- invalid
 	{"ui/squads/bg_large.dds",     "ui/squads/bg_large_black.dds"}, -- unassigned
-	{"ui/squads/bg_zoidberg.dds",  "ui/squads/bg_black.dds"}, -- red
-	{"ui/squads/bg_gir2.dds",      "ui/squads/bg_black.dds"}, -- green
-	{"ui/squads/bg_sonic.dds",     "ui/squads/bg_black.dds"}, -- blue
-	{"ui/squads/bg_spongebob.dds", "ui/squads/bg_black.dds"}, -- yellow
-	{"ui/squads/bg_tentacle.dds",  "ui/squads/bg_black.dds"}, -- purple
-	{"ui/squads/bg_pinky.dds",     "ui/squads/bg_black.dds"}, -- pink
+	{"ui/squads/bg_zoidberg.dds",  "ui/squads/bg_black.dds", "ui/squads/bg_full.dds"}, -- red
+	{"ui/squads/bg_gir2.dds",      "ui/squads/bg_black.dds", "ui/squads/bg_full.dds"}, -- green
+	{"ui/squads/bg_sonic.dds",     "ui/squads/bg_black.dds", "ui/squads/bg_full.dds"}, -- blue
+	{"ui/squads/bg_spongebob.dds", "ui/squads/bg_black.dds", "ui/squads/bg_full.dds"}, -- yellow
+	{"ui/squads/bg_tentacle.dds",  "ui/squads/bg_black.dds", "ui/squads/bg_full.dds"}, -- purple
+	{"ui/squads/bg_pinky.dds",     "ui/squads/bg_black.dds", "ui/squads/bg_full.dds"}, -- pink
 }
 
 
