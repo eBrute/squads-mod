@@ -47,18 +47,14 @@ if Client then
         if model ~= nil then
 
             -- NOTE begin squad code
-            local isInSquad = HasMixin(self, "SquadMember") and not self:isa("MarineCommander") and self:GetSquadNumber() > kSquadType.Unassigned
-            local isInSameSquad = isInSquad and GetAreFriends(self, player) and self:GetSquadNumber() == player:GetSquadNumber()
-            local hasSquadOutline = isInSameSquad or (isInSquad and (player:isa("MarineCommander") or Client.GetLocalClientTeamNumber() == kSpectatorIndex))
             local outlineModel = Client.GetOutlinePlayers() and
                                     ( ( Client.GetLocalClientTeamNumber() == kSpectatorIndex ) or
                                       ( player:isa("MarineCommander") and self.catpackboost )  or
-                                      hasSquadOutline )
-
+                                      ( SquadOutlines and SquadOutlines.hasSquadOutline(self, player) )
+                                    )
             local outlineColor
-            if hasSquadOutline then
-                local squadNumber = self:GetSquadNumber()
-                outlineColor = EquipmentOutline_GetSquadColor(squadNumber)
+            if SquadOutlines and SquadOutlines.hasSquadOutline(self, player) then
+                outlineColor = SquadOutlines.getSquadOutlineColor(self, kMarineTeamType)
             -- NOTE end squad code
             elseif self.catpackboost then
                 outlineColor = kEquipmentOutlineColor.Fuchsia

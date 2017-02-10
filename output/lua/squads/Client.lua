@@ -1,4 +1,5 @@
 -- Hook to handle squad select menu loading and closing
+Script.Load("lua/squads/SquadOutlines.lua")
 
 gSquadSelect = nil
 
