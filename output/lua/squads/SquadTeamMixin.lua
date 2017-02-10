@@ -28,7 +28,7 @@ end
 -- NOTE entity is added to team on creation, even before control is transfered to entity
 function SquadTeamMixin:AddPlayer(player)
     if player and player:isa("Player") then
-        self:AddPlayerToSquad(player, kSquadType.Unassigned)
+        self:AddPlayerToSquad(player, kSquadPlayerDefault)
     end
 end
 

@@ -94,7 +94,14 @@ if Server then
                 oldSquad:AddPlayer(self)
             end
         else
-            Server.SendNetworkMessage(self:GetClient(), "SquadMemberJoinedTeam", {newTeam = self:GetTeamNumber()}, true)
+            local client = self:GetClient()
+            if client then
+                if client:GetIsVirtual() then
+                    self:SwitchToSquad(kSquadBotDefault) -- default squad for bots
+                else
+                    Server.SendNetworkMessage(client, "SquadMemberJoinedTeam", {newTeam = self:GetTeamNumber()}, true)
+                end
+            end
         end
     end
 end

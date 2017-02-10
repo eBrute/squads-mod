@@ -16,6 +16,9 @@ kSquadType = enum {
 	"Squad6",
 }
 
+kSquadPlayerDefault = kSquadType.Unassigned
+kSquadBotDefault = kSquadType.Squad2
+
 kSquadNames = {
 	[0] = "Invalid",
 	"Unassigned",
