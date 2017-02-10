@@ -25,6 +25,7 @@ end
 
 
 -- NOTE on teamswitch, AddPlayer happens before RemovePlayer
+-- NOTE entity is added to team on creation, even before control is transfered to entity
 function SquadTeamMixin:AddPlayer(player)
     if player and player:isa("Player") then
         self:AddPlayerToSquad(player, kSquadType.Unassigned)
