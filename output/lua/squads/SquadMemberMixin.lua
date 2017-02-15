@@ -33,6 +33,7 @@ end
 -- NOTE does not notify squad, use SwitchToSquad() instead, called on the server only
 function SquadMemberMixin:SetSquadNumber(squadNumber)
     self.squadNumber = squadNumber
+    self:UpdateMinimapBlip()
 end
 
 
@@ -72,6 +73,13 @@ end
 function SquadMemberMixin:GetSquadRallyPoint()
     Log("SquadMemberMixin:GetSquadRallyPoint: %s > current squad target: %s %s", self, targetLocation, targetLocationId)
     return self.squadRallyPoint, self.squadRallyPointLocationId
+end
+
+function SquadMemberMixin:UpdateMinimapBlip()
+    if HasMixin(self, "MapBlip") and self.mapBlipId and Shared.GetEntity(self.mapBlipId) then
+        local mapBlip = Shared.GetEntity(self.mapBlipId)
+        mapBlip.squadNumber = self.squadNumber
+    end
 end
 
 

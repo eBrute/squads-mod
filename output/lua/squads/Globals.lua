@@ -5,6 +5,7 @@ kSquadTeams = {
 
 kMaxSquadsMembersPerSquad = 6
 
+-- NOTE adding new squads requires changes in HiveVision.lua and EquipmentOutline.lua (+ associated texture files)
 kSquadType = enum {
 	[0] = "Invalid",
 	"Unassigned",
@@ -30,7 +31,7 @@ kSquadNames = {
 	"Pink Squad",
 }
 
-kSquadMenuBackgroundTextures = {
+kSquadMenuBackgroundTextures = { -- active, inactive, full
 	[0] = nil, -- invalid
 	{"ui/squads/bg_large.dds",     "ui/squads/bg_large_black.dds"}, -- unassigned
 	{"ui/squads/bg_zoidberg.dds",  "ui/squads/bg_black.dds", "ui/squads/bg_full.dds"}, -- red
@@ -52,8 +53,9 @@ kSquadMenuSounds = {
 	"sound/squads.fev/squads/pinkiepie", -- pink
 }
 
+
 kSquadColors = { -- used for menu squad title and scoreboard
-	[0] = Color(0.25, 0.25, 0.25, 1), -- invalid
+	[0] = nil, -- invalid (unused)
 	Color(0.55, 0.55, 0.55, 1), -- unassigned
 	Color(0.95, 0.34, 0.37, 1), -- red
 	Color(0.58, 0.75, 0.25, 1), -- green
@@ -72,4 +74,15 @@ kSquadMenuPlayerColors = {
 	Color(0.137255, 0.149020, 0.160784, 1), -- yellow
 	Color(0.137255, 0.149020, 0.160784, 1), -- purple
 	Color(0.137255, 0.149020, 0.160784, 1), -- pink
+}
+
+kSquadMinimapBlipColors = { -- used for players on the minimap
+	[0] = Color(0.25, 0.25, 0.25, 1), -- invalid (unused)
+	Color(0.55, 0.55, 0.55, 1), -- unassigned
+	Color(0.95, 0.34, 0.37, 1), -- red
+	Color(0.58, 0.75, 0.25, 1), -- green
+	Color(0.22, 0.40, 0.69, 1), -- blue
+	Color(0.99, 0.84, 0.05, 1), -- yellow
+	Color(0.39, 0.29, 0.62, 1), -- purple
+	Color(0.96, 0.59, 0.74, 1), -- pink
 }
