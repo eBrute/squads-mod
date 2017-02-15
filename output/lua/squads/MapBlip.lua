@@ -17,16 +17,14 @@ if Client then
         local teamVisible = self.OnSameMinimapBlipTeam(minimap.playerTeam, blipTeam) or minimap.spectating
         local blipColor = item.blipColor
 
-        if self.ownerEntityId then
-            local player = Shared.GetEntity(self.ownerEntityId)
+        if teamVisible and self.ownerEntityId then
             local localPlayer = Client.GetLocalPlayer()
 
-            if SquadUtils.canPlayerSeeSquad(localPlayer, player) then
+            if SquadUtils.canPlayerSeeSquadMapBlip(localPlayer, self.squadNumber, self:GetTeamNumber()) then
                 blipColor = kSquadMinimapBlipColors[self.squadNumber]
             end
 
-            if teamVisible and self.isInCombat then
-                -- blipColor = self.PulseDarkRed(blipColor)
+            if self.isInCombat then
                 local percentage = (math.cos(Shared.GetTime() * 10) + 1) * 0.5
                 blipColor = LerpColor(kRed, blipColor, percentage)
             end

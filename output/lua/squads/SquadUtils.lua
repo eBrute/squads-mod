@@ -29,3 +29,16 @@ function SquadUtils.canPlayerSeeSquad(player, entity)
     local playerCanSeeAllSquads = isInSquad and (isInSameTeam and playerIsCommander or playerIsSpectator)
     return playerCanSeeThisSquad or playerCanSeeAllSquads
 end
+
+
+function SquadUtils.canPlayerSeeSquadMapBlip(player, squadNumber, teamNumber)
+    local playerIsCommander = player:isa("Commander")
+    local playerIsSpectator = player:GetTeamNumber() == kSpectatorIndex -- Client.GetLocalClientTeamNumber()
+
+    local isInSameTeam = player:GetTeamNumber() == teamNumber
+    local isInSameSquad = isInSameTeam and SquadUtils.isInSquad(player) and player:GetSquadNumber() == squadNumber
+
+    local playerCanSeeThisSquad = isInSameSquad
+    local playerCanSeeAllSquads = isInSameTeam and playerIsCommander or playerIsSpectator
+    return playerCanSeeThisSquad or playerCanSeeAllSquads
+end
