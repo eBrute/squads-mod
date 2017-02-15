@@ -14,7 +14,7 @@ local kLineWidth = 0.44
 local kLineFadeInSpeed = 8
 local kLineFadeOutSpeed = 1
 local kMaxDistToPlayerSquared = 8 * 8
-local kMinDistToTargetSquared = 1.5 * 1.5
+local kMinDistToTargetSquared = 16 * 16
 local kMaxPathLength = 30
 
 function GUISquadWaypoints:Initialize()
@@ -88,7 +88,8 @@ function GUISquadWaypoints:GetPathToSquad(fromHere)
         -- dont show waypoints if we dont have a target location
         if not targetLocationId or targetLocationId == -1 then return end
         -- or if we are in same room already
-        if targetLocationId == player.locationId then return end
+        -- NOTE disabled for now since rooms can be big, but increased kMinDistToTargetSquared to compensate
+        -- if targetLocationId == player.locationId then return end
 
         local points = PointArray()
         local isReachable = Pathing.GetPathPoints(fromHere, targetLocation, points)
@@ -139,8 +140,8 @@ function GUISquadWaypoints:UpdatePath()
         local length = (lastPoint - point):GetLength()
 
         -- Move the line a bit off the ground.
-        local lineStart = lastPoint + Vector(0, -0.87, 0)
-        local lineEnd = point + Vector(0, -0.87, 0) -- NOTE maybe trace down here
+        local lineStart = lastPoint + Vector(0, -0.84, 0)
+        local lineEnd = point + Vector(0, -0.84, 0) -- NOTE maybe trace down here
         local line = self:CreateLineSegment(lineStart, lineEnd, length)
         table.insert(self.lineSegments, line)
 
