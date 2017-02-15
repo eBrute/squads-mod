@@ -70,10 +70,11 @@ end
 
 
 function SquadMemberMixin:SetSquadRallyPoint(rallyPoint, locationId)
-    -- Log("SquadMemberMixin:SetSquadRallyPoint %s > %s %s", self, rallyPoint, locationId)
     local location = GetLocationForPoint(rallyPoint)
     if location then
         Log("SquadMemberMixin:SetSquadRallyPoint in %s %s (%s)", locationId, location:GetName(), rallyPoint)
+    else
+        Log("SquadMemberMixin:SetSquadRallyPoint %s (%s)", locationId, rallyPoint )
     end
     self.squadRallyPoint = rallyPoint or Vector(0,0,0)
     self.squadRallyPointLocationId = locationId or -1
@@ -90,6 +91,34 @@ function SquadMemberMixin:UpdateMinimapBlip()
     if HasMixin(self, "MapBlip") and self.mapBlipId and Shared.GetEntity(self.mapBlipId) then
         local mapBlip = Shared.GetEntity(self.mapBlipId)
         mapBlip.squadNumber = self.squadNumber
+    end
+end
+
+
+function SquadMemberMixin:GetUsablePoints()
+    return { self:GetOrigin() }
+end
+
+
+function SquadMemberMixin:GetCanBeUsed(player, useSuccessTable)
+    local isInSquad = self.squadNumber > kSquadType.Unassigned
+    local isInSameTeam = SquadUtils.isInSameTeam(player, self)
+    local isInSameSquad = SquadUtils.isInSameSquad(player, self)
+    useSuccessTable.useSuccess = isInSameTeam and isInSquad and not isInSameSquad
+end
+
+
+if Server then
+    function SquadMemberMixin:OnUseTarget(entity)
+        local now = Shared.GetTime()
+        if not self.lastUseTime or now > self.lastUseTime + 0.2 then
+            Log("i (%s) used (%s)", self, entity)
+            if entity and HasMixin(entity, "SquadMember") then
+                local wishSquad = entity:GetSquadNumber()
+                Server.SendCommand(self, string.format("select_squad %s", wishSquad)) -- NOTE we cannot just switchSquad here since we need to invoke OnSquadNumberChange
+            end
+            self.lastUseTime = now
+        end
     end
 end
 
