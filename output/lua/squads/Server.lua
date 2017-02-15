@@ -5,7 +5,7 @@ local function OnSelectSquad(client, message)
     local player = client:GetControllingPlayer()
     if HasMixin(player, "SquadMember") then
         local success = player:SwitchToSquad(message.squadNumber)
-        Server.SendNetworkMessage(client, "SquadMemberJoinedSquad", {success = success}, true)
+        Server.SendNetworkMessage(client, "SquadMemberJoinedSquad", {squadNumber = message.squadNumber, success = success}, true)
     end
 end
 

@@ -1,3 +1,5 @@
+Script.Load("lua/squads/Globals.lua")
+
 local function OnDumpSquads()
     if Server then
         local teams = GetGamerules():GetTeams()
@@ -12,6 +14,6 @@ local function OnDumpSquads()
 end
 Event.Hook("Console_dump_squads", OnDumpSquads)
 
-Shared.RegisterNetworkMessage("SquadMemberJoinedTeam")
-Shared.RegisterNetworkMessage("SquadMemberJoinedSquad", { success = "boolean" })
-Shared.RegisterNetworkMessage("SelectSquad", { squadNumber = "integer" })
+Shared.RegisterNetworkMessage("SquadMemberJoinedTeam", {newTeam = "integer (" .. kTeamInvalid .. " to " .. kSpectatorIndex .. ")"})
+Shared.RegisterNetworkMessage("SquadMemberJoinedSquad", { squadNumber = "enum kSquadType", success = "boolean" })
+Shared.RegisterNetworkMessage("SelectSquad", { squadNumber = "enum kSquadType" })

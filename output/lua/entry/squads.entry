@@ -3,5 +3,5 @@ modEntry = {
 	Shared = "lua/squads/Shared.lua",
 	Server = "lua/squads/Server.lua",
 	FileHooks = "lua/squads/FileHooks.lua",
-	Priority = 10
+	Priority = 48
 };

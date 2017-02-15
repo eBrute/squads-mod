@@ -1,0 +1,2 @@
+shader = "shaders/Emissive.surface_shader"
+emissiveMap = "ui/squads/waypoint_path_alien.dds"

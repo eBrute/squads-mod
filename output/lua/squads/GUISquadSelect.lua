@@ -1,4 +1,5 @@
 Script.Load("lua/Globals.lua")
+Script.Load("lua/squads/Globals.lua")
 
 class 'GUISquadSelect' (GUIScript)
 
@@ -6,22 +7,29 @@ GUISquadSelect.kSquadNameFont = Fonts.kAgencyFB_Large_Bold
 GUISquadSelect.kSquadPlayerFont = Fonts.kKartika_Medium
 GUISquadSelect.kSquadArrow = PrecacheAssetSafe("ui/squads/arrow.dds")
 GUISquadSelect.kSquadFriends = PrecacheAssetSafe("ui/squads/friends.dds")
-GUISquadSelect.kSquadActiveBackgrounds = {}
-GUISquadSelect.kSquadInactiveBackgrounds = {}
+GUISquadSelect.kSquadBackgroundsActive = {}
+GUISquadSelect.kSquadBackgroundsInactive = {}
+GUISquadSelect.kSquadBackgroundsFull = {}
 for i, texture in pairs(kSquadMenuBackgroundTextures) do
-    if texture and type(texture[1]) == "string" and not GUISquadSelect.kSquadActiveBackgrounds[i] then
-        GUISquadSelect.kSquadActiveBackgrounds[i] = PrecacheAssetSafe(texture[1])
+    if texture and type(texture[1]) == "string" and not GUISquadSelect.kSquadBackgroundsActive[i] then
+        GUISquadSelect.kSquadBackgroundsActive[i] = PrecacheAssetSafe(texture[1])
     end
-    if texture and type(texture[2]) == "string" and not GUISquadSelect.kSquadInactiveBackgrounds[i] then
-        GUISquadSelect.kSquadInactiveBackgrounds[i] = PrecacheAssetSafe(texture[2])
+    if texture and type(texture[2]) == "string" and not GUISquadSelect.kSquadBackgroundsInactive[i] then
+        GUISquadSelect.kSquadBackgroundsInactive[i] = PrecacheAssetSafe(texture[2])
+    end
+    if texture and type(texture[3]) == "string" and not GUISquadSelect.kSquadBackgroundsFull[i] then
+        GUISquadSelect.kSquadBackgroundsFull[i] = PrecacheAssetSafe(texture[3])
     end
 end
 GUISquadSelect.kSounds = {
     hovar = "sound/NS2.fev/common/hovar",
     click = "sound/NS2.fev/common/button_click",
-    invalid =  "sound/NS2.fev/common/invalid",
+    invalid = "sound/NS2.fev/common/invalid",
 }
-for _, soundAsset in pairs(GUIFeedbackState_Reason.kSounds) do
+for _, soundAsset in pairs(GUISquadSelect.kSounds) do
+    Client.PrecacheLocalSound(soundAsset)
+end
+for _, soundAsset in ipairs(kSquadMenuSounds) do
     Client.PrecacheLocalSound(soundAsset)
 end
 
@@ -37,9 +45,7 @@ end
 
 
 function GUISquadSelect:Initialize()
-    GUIAnimatedScript.Initialize(self)
     self:_InitializeBackground()
-    self.isVisible = false
     self.screen:SetIsVisible(false) -- children inherit setting
 end
 
@@ -114,8 +120,20 @@ function GUISquadSelect:Uninitialize()
 end
 
 
-function GetSquadMaxPlayerSlots(squad)
-    return  ConditionalValue(squad == kSquadType.Unassigned, 30, kMaxSquadsMembersPerSquad)
+function GUISquadSelect:GetSquadUsedPlayerSlots(squad)
+    local num = 0
+    local playerSlots = self.SquadRegions[squad].playerSlots
+    for i = 1, #playerSlots do
+        if playerSlots[i].used then
+            num = num + 1
+        end
+    end
+    return num
+end
+
+
+local function GetSquadMaxPlayerSlots(squad)
+    return ConditionalValue(squad == kSquadType.Unassigned, 30, kMaxSquadsMembersPerSquad)
 end
 
 
@@ -135,8 +153,13 @@ function GUISquadSelect:Update(deltaTime)
             local mouseOver = GUIItemContainsPoint(region.background, Client.GetCursorPosScreen())
             if (mouseOver) then
                 if mouseOver ~= region.mouseOverState then
-                    StartSoundEffect(GUISquadSelect.kSounds.hovar)
-                    region.background:SetTexture( self.kSquadActiveBackgrounds[squad] )
+                    if squad > kSquadType.Unassigned and self:GetSquadUsedPlayerSlots(squad) >= kMaxSquadsMembersPerSquad then
+                        StartSoundEffect(GUISquadSelect.kSounds.invalid)
+                        region.background:SetTexture( self.kSquadBackgroundsFull[squad] )
+                    else
+                        StartSoundEffect(GUISquadSelect.kSounds.hovar)
+                        region.background:SetTexture( self.kSquadBackgroundsActive[squad] )
+                    end
                 end
 
                 for p = 1, GetSquadMaxPlayerSlots(squad) do
@@ -146,7 +169,7 @@ function GUISquadSelect:Update(deltaTime)
                 region.mouseOverState = true
             else
                 if mouseOver ~= region.mouseOverState then
-                    region.background:SetTexture( self.kSquadInactiveBackgrounds[squad] )
+                    region.background:SetTexture( self.kSquadBackgroundsInactive[squad] )
                 end
 
                 for p = 1, GetSquadMaxPlayerSlots(squad) do
@@ -167,7 +190,8 @@ function GUISquadSelect:Update(deltaTime)
                 if players[p].EntityTeamNumber == teamNumber and players[p].SquadNumber == squad and #unusedPlayerSlots > 0 then
 
                     local playerSlot = unusedPlayerSlots[#unusedPlayerSlots]
-                    local slotUsed = true
+                    -- local slotUsed = true
+                    playerSlot.used = true
 
                     if players[p].SteamId == Client.GetSteamId() then
                         playerSlot.playerIcon:SetIsVisible(true)
@@ -181,15 +205,16 @@ function GUISquadSelect:Update(deltaTime)
                         playerSlot.playerIcon:SetIsVisible(false)
                     end
 
-                    if slotUsed then
-                        playerSlot.playerName:SetText(players[p].Name)
-                        table.remove(unusedPlayerSlots)
-                    end
+                    -- if slotUsed then
+                    playerSlot.playerName:SetText(players[p].Name)
+                    table.remove(unusedPlayerSlots)
+                    -- end
                 end
             end
 
             -- remove unused players from list
             for i = 1, #unusedPlayerSlots do
+                unusedPlayerSlots[i].used = false
                 unusedPlayerSlots[i].playerName:SetText('')
                 unusedPlayerSlots[i].playerIcon:SetIsVisible(false)
             end
@@ -237,7 +262,7 @@ function GUISquadSelect:_InitializeBackground()
         squadRegion.background:SetAnchor( GUIItem.Left, GUIItem.Top )
         squadRegion.background:SetPosition( ScaledCoords(xOffset, yOffset) )
         squadRegion.background:SetSize( ScaledCoords( columnWidth, ConditionalValue(i==kSquadType.Unassigned, fullHeight, halfHeight)) )
-        squadRegion.background:SetTexture( self.kSquadInactiveBackgrounds[i] )
+        squadRegion.background:SetTexture( self.kSquadBackgroundsInactive[i] )
         squadRegion.background:SetInheritsParentAlpha( true )
         squadRegion.background:AddAsChildTo( self.screen )
 
@@ -270,6 +295,8 @@ function GUISquadSelect:_InitializeBackground()
             squadRegion.playerSlots[j] = {}
 
             local playerSlot = {}
+
+            playerSlot.used = false
 
             playerSlot.content = GetGUIManager():CreateGraphicItem()
             playerSlot.content:SetLayer( kGUILayerMainMenuDialogs )

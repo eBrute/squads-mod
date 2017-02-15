@@ -6,5 +6,7 @@ local oldMarineTeamInitialize = MarineTeam.Initialize
 
 function MarineTeam:Initialize(teamName, teamNumber)
 	oldMarineTeamInitialize(self, teamName, teamNumber)
-	InitMixin(self, SquadTeamMixin, {teamName = teamName, teamNumber = teamNumber})
+	if kSquadTeams[kTeam1Index] then
+		InitMixin(self, SquadTeamMixin, {teamName = teamName, teamNumber = teamNumber})
+	end
 end

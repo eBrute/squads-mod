@@ -1,6 +1,11 @@
 -- Hook to handle squad select menu loading and closing
+Script.Load("lua/squads/SquadOutlines.lua")
 
 gSquadSelect = nil
+
+local function GetTeamHasSquads(team)
+    return kSquadTeams[team]
+end
 
 local function CreatequadSelectMenuIfNotExists()
     if not gSquadSelect then
@@ -17,8 +22,7 @@ end
 
 local function ShowSquadSelectMenu()
     CreatequadSelectMenuIfNotExists()
-    local player = Client.GetLocalPlayer()
-    if player:GetIsOnPlayingTeam() and not gSquadSelect:GetIsVisible() then
+    if not gSquadSelect:GetIsVisible() then
         gSquadSelect:SetIsVisible(true)
     end
 end
@@ -29,10 +33,26 @@ local function HideSquadSelectMenu()
     end
 end
 
+local function SetSquadSquareColors(squadNumber)
+    local c = kSquadColors[squadNumber]
+    Client.squadSquareColors = { c.r,c.g,c.b,c.a, c.r,c.g,c.b,c.a, c.r,c.g,c.b,c.a, c.r,c.g,c.b,c.a, c.r,c.g,c.b,c.a, }
+end
+
 local function OnSquadMemberJoinedSquad(message)
     if message.success then
+        local player = Client.GetLocalPlayer()
+        if player then
+            SetSquadSquareColors(message.squadNumber)
+            if HasMixin(player, "SquadMember") then
+                player:OnSquadNumberChange(message.squadNumber)
+            end
+        end
+
         if gSquadSelect then
             StartSoundEffect(GUISquadSelect.kSounds.click)
+            if kSquadMenuSounds[message.squadNumber] then
+                StartSoundEffect(kSquadMenuSounds[message.squadNumber])
+            end
             HideSquadSelectMenu()
         end
     else
@@ -49,19 +69,20 @@ local function ToggleSquadSelectMenu()
     if gSquadSelect and gSquadSelect:GetIsVisible() then
         HideSquadSelectMenu()
     else
-        ShowSquadSelectMenu()
+        local player = Client.GetLocalPlayer()
+        if GetTeamHasSquads(player:GetTeamNumber()) then
+            ShowSquadSelectMenu()
+        end
     end
 end
 
 Event.Hook("Console_squad_menu", ToggleSquadSelectMenu)
 
 
-local function ToggleSquadSelectMenuOnTeamChange()
-    local player = Client.GetLocalPlayer()
-    if player:GetIsOnPlayingTeam() then
+local function ToggleSquadSelectMenuOnTeamChange(message)
+    if GetTeamHasSquads(message.newTeam) then
         ShowSquadSelectMenu()
-    elseif not player:GetIsOnPlayingTeam() then
-        -- NOTE when you join right after the map is loaded, player reports team 0
+    else
         HideSquadSelectMenu()
     end
 end

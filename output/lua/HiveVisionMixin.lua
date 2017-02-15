@@ -109,15 +109,10 @@ if Client then
         end
 
         -- NOTE begin squad code
-        local isInSquad = HasMixin(self, "SquadMember") and not self:isa("AlienCommander") and self:GetSquadNumber() > kSquadType.Unassigned
-        local isInSameSquad = isInSquad and GetAreFriends(self, player) and self:GetSquadNumber() == player:GetSquadNumber()
-        local hasSquadOutline = (isInSameSquad and (player:isa("Alien") or player:isa("AlienSpectator"))) or (isInSquad and player:isa("AlienCommander"))
-
         local outlineColor
         if visible then
-            if hasSquadOutline then
-                local squadNumber = self:GetSquadNumber()
-                outlineColor = HiveVision_GetSquadColor(squadNumber)
+            if SquadOutlines and SquadOutlines.hasSquadOutline(self, player) then
+                outlineColor = SquadOutlines.getSquadOutlineColor(self, kAlienTeamType)
             elseif parasited then
                 outlineColor = kHiveVisionOutlineColor.Yellow
             elseif self:isa("Gorge") then

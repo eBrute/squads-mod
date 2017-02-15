@@ -612,7 +612,9 @@ local function UpdateUnitStatusBlip( self, blipData, updateBlip, localPlayerIsCo
     end
 
     -- Hints
-    if showHints and blipHintText ~= nil and blipHintText ~= "" and alpha > 0 then
+    -- NOTE begin squad code
+    if ( showHints or blipData.SquadNumber ) and blipHintText ~= nil and blipHintText ~= "" and alpha > 0 then
+    -- NOTE end squad code
         updateBlip.HintText:SetIsVisible(true)
         updateBlip.HintText:SetText(blipHintText)
         updateBlip.HintText:SetColor(textColor)

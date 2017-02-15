@@ -25,9 +25,10 @@ end
 
 
 -- NOTE on teamswitch, AddPlayer happens before RemovePlayer
+-- NOTE entity is added to team on creation, even before control is transfered to entity
 function SquadTeamMixin:AddPlayer(player)
     if player and player:isa("Player") then
-        self:AddPlayerToSquad(player, kSquadType.Unassigned)
+        self:AddPlayerToSquad(player, kSquadPlayerDefault)
     end
 end
 
@@ -68,6 +69,13 @@ function SquadTeamMixin:ResetSquads()
     for squadNumber = 1, #kSquadType do
 		self.squads[squadNumber]:Reset()
 	end
+end
+
+
+function SquadTeamMixin:Update(deltaTime)
+    for squadNumber = 1, #kSquadType do
+        self.squads[squadNumber]:OnUpdate(deltaTime)
+    end
 end
 
 
