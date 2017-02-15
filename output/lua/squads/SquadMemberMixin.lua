@@ -83,7 +83,7 @@ end
 
 function SquadMemberMixin:GetSquadRallyPoint()
     -- Log("SquadMemberMixin:GetSquadRallyPoint: %s > current squad target: %s %s", self, targetLocation, targetLocationId)
-    return self.squadRallyPoint, self.squadRallyPointLocationId
+    return self.squadRallyPointLocationId, self.squadRallyPoint
 end
 
 

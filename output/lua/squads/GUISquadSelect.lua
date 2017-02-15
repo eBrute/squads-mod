@@ -1,4 +1,5 @@
 Script.Load("lua/Globals.lua")
+Script.Load("lua/squads/Globals.lua")
 
 class 'GUISquadSelect' (GUIScript)
 
@@ -44,9 +45,7 @@ end
 
 
 function GUISquadSelect:Initialize()
-    GUIAnimatedScript.Initialize(self)
     self:_InitializeBackground()
-    self.isVisible = false
     self.screen:SetIsVisible(false) -- children inherit setting
 end
 

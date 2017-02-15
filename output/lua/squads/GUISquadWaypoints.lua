@@ -83,7 +83,7 @@ function GUISquadWaypoints:GetPathToSquad(fromHere)
         and not player:isa("Commander")
         and player:GetSquadNumber() > kSquadType.Unassigned
     then
-        local targetLocation, targetLocationId = player:GetSquadRallyPoint()
+        local targetLocationId, targetLocation = player:GetSquadRallyPoint()
 
         -- dont show waypoints if we dont have a target location
         if not targetLocationId or targetLocationId == -1 then return end
