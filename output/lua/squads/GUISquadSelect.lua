@@ -25,7 +25,10 @@ GUISquadSelect.kSounds = {
     click = "sound/NS2.fev/common/button_click",
     invalid = "sound/NS2.fev/common/invalid",
 }
-for _, soundAsset in pairs(GUIFeedbackState_Reason.kSounds) do
+for _, soundAsset in pairs(GUISquadSelect.kSounds) do
+    Client.PrecacheLocalSound(soundAsset)
+end
+for _, soundAsset in ipairs(kSquadMenuSounds) do
     Client.PrecacheLocalSound(soundAsset)
 end
 

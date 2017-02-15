@@ -50,6 +50,9 @@ local function OnSquadMemberJoinedSquad(message)
 
         if gSquadSelect then
             StartSoundEffect(GUISquadSelect.kSounds.click)
+            if kSquadMenuSounds[message.squadNumber] then
+                StartSoundEffect(kSquadMenuSounds[message.squadNumber])
+            end
             HideSquadSelectMenu()
         end
     else

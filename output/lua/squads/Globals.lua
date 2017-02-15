@@ -41,6 +41,16 @@ kSquadMenuBackgroundTextures = {
 	{"ui/squads/bg_pinky.dds",     "ui/squads/bg_black.dds", "ui/squads/bg_full.dds"}, -- pink
 }
 
+kSquadMenuSounds = {
+	[0] = nil, -- invalid
+	"sound/squads.fev/squads/homer", -- unassigned
+	"sound/squads.fev/squads/zoidberg", -- red
+	"sound/squads.fev/squads/gir", -- green
+	"sound/squads.fev/squads/sonic", -- blue
+	"sound/squads.fev/squads/spongebob", -- yellow
+	"sound/squads.fev/squads/tentacle", -- purple
+	"sound/squads.fev/squads/pinkiepie", -- pink
+}
 
 kSquadColors = { -- used for menu squad title and scoreboard
 	[0] = Color(0.25, 0.25, 0.25, 1), -- invalid
