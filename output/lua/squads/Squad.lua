@@ -68,25 +68,56 @@ end
 function Squad:OnUpdate(deltaTime)
     local now = Shared.GetTime()
     if now > self.nextUpdateTime then
-        local rallyPoint = Vector(0,0,0)
-        local locationId = -1
-        for _, playerId in ipairs(self.playerIds) do
-            local player = Shared.GetEntity(playerId)
-            if player and player:isa("Player") and HasMixin(player, "SquadMember") then
-                -- Log("Squad %s: player %s in %s", self.squadName, player, player.locationId)
-                -- if player.locationId then Log("player is in %s", Shared.GetString(player.locationId)) end
+        self:UpdateRallyPoint()
+        self.nextUpdateTime = now + kUpdateIntervalMedium
+    end
+end
 
-                local techPoints = EntityListToTable(Shared.GetEntitiesWithClassname("TechPoint"))
-                Shared.SortEntitiesByDistance(Vector(1,1,1), techPoints)
-                rallyPoint = techPoints[1]:GetOrigin()
-                locationId = techPoints[1].locationId
+
+function Squad:UpdateRallyPoint()
+    local now = Shared.GetTime()
+    local eligibleSquadMembers = {}
+    for _, playerId in ipairs(self.playerIds) do
+        local player = Shared.GetEntity(playerId)
+        if player and player:isa("Player") and HasMixin(player, "SquadMember")
+        and player.spawnLocationId and player.spawnTime
+        then
+            -- we dont want to unite with players that just spawned
+            if player:GetLocationId() ~= player.spawnLocationId
+            or now > player.spawnTime + 10 then
+                table.insert(eligibleSquadMembers, player)
             end
         end
+    end
 
-        if locationId ~= self.rallyPointLocationId then
-            self:SetRallyPoint(rallyPoint, locationId)
+    local squadCenterPoint = Vector(0,0,0)
+    for i = 1, #eligibleSquadMembers do
+        local player = eligibleSquadMembers[i]
+        local origin = player:GetOrigin()
+        squadCenterPoint = squadCenterPoint + origin
+    end
+    if #eligibleSquadMembers > 0 then
+        squadCenterPoint = squadCenterPoint / #eligibleSquadMembers
+    end
+
+    -- find squad member closest to squad center
+    local closestPlayer = nil
+    local closestDistance = math.huge
+    for i = 1, #eligibleSquadMembers do
+        local player = eligibleSquadMembers[i]
+        local origin = player:GetOrigin()
+        local dist = (squadCenterPoint - origin):GetLengthSquared()
+        if dist < closestDistance then
+            closestPlayer = player
+            closestDistance = dist
         end
-        self.nextUpdateTime = now + kUpdateIntervalMedium
+    end
+
+    local rallyPoint = closestPlayer and closestPlayer:GetOrigin() or Vector(0,0,0)
+    local locationId =  closestPlayer and closestPlayer:GetLocationId() or -1
+    -- only update when we want the rally point is in a new room or moved too far
+    if locationId ~= self.rallyPointLocationId or (rallyPoint - self.rallyPoint):GetLengthSquared() > 5*5 then
+        self:SetRallyPoint(rallyPoint, locationId)
     end
 end
 

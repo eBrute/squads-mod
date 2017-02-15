@@ -63,17 +63,28 @@ function SquadMemberMixin:SwitchToSquad(squadNumber)
 end
 
 
+function SquadMemberMixin:OnSpawn()
+    self.spawnTime = Shared.GetTime()
+    self.spawnLocationId = self:GetLocationId()
+end
+
+
 function SquadMemberMixin:SetSquadRallyPoint(rallyPoint, locationId)
-    Log("SquadMemberMixin:SetSquadRallyPoint %s > %s %s", self, rallyPoint, locationId)
+    -- Log("SquadMemberMixin:SetSquadRallyPoint %s > %s %s", self, rallyPoint, locationId)
+    local location = GetLocationForPoint(rallyPoint)
+    if location then
+        Log("SquadMemberMixin:SetSquadRallyPoint in %s %s (%s)", locationId, location:GetName(), rallyPoint)
+    end
     self.squadRallyPoint = rallyPoint or Vector(0,0,0)
     self.squadRallyPointLocationId = locationId or -1
 end
 
 
 function SquadMemberMixin:GetSquadRallyPoint()
-    Log("SquadMemberMixin:GetSquadRallyPoint: %s > current squad target: %s %s", self, targetLocation, targetLocationId)
+    -- Log("SquadMemberMixin:GetSquadRallyPoint: %s > current squad target: %s %s", self, targetLocation, targetLocationId)
     return self.squadRallyPoint, self.squadRallyPointLocationId
 end
+
 
 function SquadMemberMixin:UpdateMinimapBlip()
     if HasMixin(self, "MapBlip") and self.mapBlipId and Shared.GetEntity(self.mapBlipId) then

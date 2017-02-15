@@ -42,3 +42,14 @@ function Team:ForEachPlayer(functor)
         end
     end
 end
+
+
+local oldRespawnPlayer = Team.RespawnPlayer
+function Team:RespawnPlayer(player, origin, angles)
+	local success
+	success = oldRespawnPlayer(self, player, origin, angles)
+	if HasMixin(self, "SquadTeam") and success and HasMixin(player, "SquadMember") then
+		player:OnSpawn()
+	end
+	return success
+end
