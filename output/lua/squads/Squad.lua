@@ -80,6 +80,7 @@ function Squad:UpdateRallyPoint()
     for _, playerId in ipairs(self.playerIds) do
         local player = Shared.GetEntity(playerId)
         if player and player:isa("Player") and HasMixin(player, "SquadMember")
+        and not player:isa("Commander")
         and player.spawnLocationId and player.spawnTime
         then
             -- we dont want to unite with players that just spawned
@@ -90,6 +91,7 @@ function Squad:UpdateRallyPoint()
         end
     end
 
+    -- TODO find better method to identify clusters
     local squadCenterPoint = Vector(0,0,0)
     for i = 1, #eligibleSquadMembers do
         local player = eligibleSquadMembers[i]
