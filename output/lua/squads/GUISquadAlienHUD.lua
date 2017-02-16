@@ -17,8 +17,6 @@ end
 
 function GUISquadAlienHUD:Initialize()
 
-    Log("GUISquadAlienHUD:Initialize")
-
     self.background = GUIManager:CreateGraphicItem()
     self.background:SetPosition( Vector(0, 0, 0) )
     self.background:SetSize( Vector(Client.GetScreenWidth(), Client.GetScreenHeight(), 0) )
@@ -48,7 +46,6 @@ end
 
 
 function GUISquadAlienHUD:SetIsVisible(visible)
-    Log("GUISquadAlienHUD:SetIsVisible %s", visible)
     self.isVisible = visible
     self.background:SetIsVisible(visible)
 end
@@ -77,7 +74,6 @@ end
 
 
 function GUISquadAlienHUD:Uninitialize()
-    Log("GUISquadAlienHUD:Uninitialize")
     if self:GetIsVisible() then
         self:SetIsVisible(false)
     end
