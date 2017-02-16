@@ -18,8 +18,6 @@ end
 
 function GUISquadMarineHUD:Initialize()
 
-    Log("GUISquadMarineHUD:Initialize")
-
     GUIAnimatedScript.Initialize(self, 0)
 
     self.scale =  Client.GetScreenHeight() / kBaseScreenHeight
@@ -53,7 +51,6 @@ end
 
 
 function GUISquadMarineHUD:SetIsVisible(visible)
-    Log("GUISquadMarineHUD:SetIsVisible %s", visible)
     self.isVisible = visible
     self.background:SetIsVisible(visible)
 end
@@ -85,7 +82,6 @@ end
 
 
 function GUISquadMarineHUD:Uninitialize()
-    Log("GUISquadMarineHUD:Uninitialize")
     if self:GetIsVisible() then
         self:SetIsVisible(false)
     end

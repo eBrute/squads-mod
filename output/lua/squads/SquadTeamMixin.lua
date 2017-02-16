@@ -10,6 +10,8 @@ SquadTeamMixin.type = "SquadTeam"
 
 function SquadTeamMixin:__initmixin()
     self.squads = {}
+    self.nextSquadUpdateTime = 0
+    self.nextSquadUpdateSquad = 1
 	for squadNumber = 1, #kSquadType do
 		self.squads[squadNumber] = Squad()
 		self.squads[squadNumber]:Initialize(self.__mixindata.teamNumber, squadNumber)
@@ -73,8 +75,15 @@ end
 
 
 function SquadTeamMixin:Update(deltaTime)
-    for squadNumber = 1, #kSquadType do
-        self.squads[squadNumber]:OnUpdate(deltaTime)
+    local now = Shared.GetTime()
+    if now > self.nextSquadUpdateTime then
+        self.squads[self.nextSquadUpdateSquad]:OnUpdate(deltaTime) -- only update one squad at a time to spread the load
+        self.nextSquadUpdateTime = now + kUpdateIntervalMedium
+        if self.nextSquadUpdateSquad < #kSquadType then
+            self.nextSquadUpdateSquad = self.nextSquadUpdateSquad + 1
+        else
+            self.nextSquadUpdateSquad = 1
+        end
     end
 end
 
