@@ -9,7 +9,6 @@ function Squad:Initialize(teamNumber, squadNumber)
     self.teamNumber = teamNumber
     self.squadNumber = squadNumber
     self.squadName = kSquadNames[squadNumber]
-    self.nextUpdateTime = 0
     self.playerIds = {}
     self.rallyPoint = Vector(0,0,0)
     self.rallyPointLocationId = -1
@@ -66,11 +65,7 @@ end
 
 
 function Squad:OnUpdate(deltaTime)
-    local now = Shared.GetTime()
-    if now > self.nextUpdateTime then
-        self:UpdateRallyPoint()
-        self.nextUpdateTime = now + kUpdateIntervalMedium
-    end
+    self:UpdateRallyPoint()
 end
 
 
