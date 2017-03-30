@@ -35,3 +35,6 @@ if Client then
 end
 
 Shared.LinkClassToMap("PlayerMapBlip", PlayerMapBlip.kMapName, playerNetworkVars)
+
+-- TODO check parasite not working on structures (?)
+-- TODO toggle with names, only color names? dont show for commanders?

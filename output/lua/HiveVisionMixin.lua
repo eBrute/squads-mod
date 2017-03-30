@@ -109,6 +109,7 @@ if Client then
         end
 
         -- NOTE begin squad code
+        -- TODO check parasite not working on structures (?)
         local outlineColor
         if visible then
             if SquadOutlines and SquadOutlines.hasSquadOutline(self, player) then
