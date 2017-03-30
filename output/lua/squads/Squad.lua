@@ -70,6 +70,7 @@ end
 
 
 function Squad:UpdateRallyPoint()
+    -- TODO sometimes doesnt update
     local now = Shared.GetTime()
     local eligibleSquadMembers = {}
     for _, playerId in ipairs(self.playerIds) do

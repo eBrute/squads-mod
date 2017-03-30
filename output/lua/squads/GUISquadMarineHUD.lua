@@ -125,6 +125,7 @@ function GUISquadMarineHUD:Update(deltaTime)
         end
 
         -- dont show when we reached the target room already
+        -- TODO show always? "Meet with others here" ?
         if currentLocationId == rallyPointLocationId then
             locationName = ""
         end
