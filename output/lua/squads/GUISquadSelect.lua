@@ -29,9 +29,9 @@ GUISquadSelect.kSounds = {
 for _, soundAsset in pairs(GUISquadSelect.kSounds) do
     Client.PrecacheLocalSound(soundAsset)
 end
-for _, soundAsset in ipairs(kSquadMenuSounds) do
-    Client.PrecacheLocalSound(soundAsset)
-end
+-- for _, soundAsset in ipairs(kSquadMenuSounds) do
+--     Client.PrecacheLocalSound(soundAsset)
+-- end
 
 
 function GUIItem:AddAsChildTo(item)
