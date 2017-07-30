@@ -12,7 +12,7 @@ function SquadTeamMixin:__initmixin()
     self.squads = {}
     self.nextSquadUpdateTime = 0
     self.nextSquadUpdateSquad = 1
-	for squadNumber = 1, #kSquadType do
+    for squadNumber = 1, #kSquadType do
 		self.squads[squadNumber] = Squad()
 		self.squads[squadNumber]:Initialize(self.__mixindata.teamNumber, squadNumber)
 	end
